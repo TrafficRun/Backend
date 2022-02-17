@@ -5,7 +5,8 @@
 GameEnv::GameEnv(GameConfig& config):
   config(config)
 {
-  timestep = config.time_step.value();
+  time_step = config.time_step.value();
+  agent_number = config.agent_number.value();
   if (config.graph_type.value() == "grid") {
     read_from_grid();
   }
@@ -17,7 +18,6 @@ int GameEnv::read_from_grid() {
     exit(-1);
   }
 
-  int time_step = 0;
   int width = 0;
   int height = 0;
   int ext_action_num = 0;
@@ -26,7 +26,6 @@ int GameEnv::read_from_grid() {
 
   int action_num = ext_action_num + 4;
   position_num = width * height;
-  timestep = time_step;
 
   double *action_reward = new double[time_step * width * height * action_num]();
   double *action_transition_pro = new double[time_step * width * height * action_num * transition_pro_num];
@@ -39,9 +38,9 @@ int GameEnv::read_from_grid() {
     fscanf(graph_fp, "%lf", action_transition_pro + loop_i);
   }
   fclose(graph_fp);
-  
-  for (int loop_i = 0; loop_i < timestep; ++loop_i) {
-    timestep_graph.push_back({});
+
+  for (int loop_i = 0; loop_i < time_step; ++loop_i) {
+    time_step_graph.push_back({});
   }
 
   for (int loop_i = 0; loop_i < position_num; ++loop_i) {
@@ -54,21 +53,21 @@ int GameEnv::read_from_grid() {
   begin_state->position_id = -1;
   graph.push_back(begin_state);
 
-  for (int loop_i = 0; loop_i < timestep; ++loop_i) {
+  for (int loop_i = 0; loop_i < time_step; ++loop_i) {
     for (int loop_h = 0; loop_h < height; ++loop_h) {
       for (int loop_w = 0; loop_w < width; ++loop_w) {
         auto new_state = new GameState();
-        new_state->state_id = graph.size();
+        new_state->state_id = static_cast<int>(graph.size());
         new_state->position_id = 1 + loop_i * width * height + loop_h * width + loop_w;
         graph.push_back(new_state);
-        timestep_graph[loop_i].push_back(new_state);
+        time_step_graph[loop_i].push_back(new_state);
         position_graph[loop_h * width + loop_w].push_back(new_state);
       }
     }
   }
-  
+
   auto end_state = new GameState();
-  end_state->state_id = graph.size();
+  end_state->state_id = static_cast<int>(graph.size());
   end_state->position_id = -1;
   graph.push_back(end_state);
 
@@ -85,7 +84,7 @@ int GameEnv::read_from_grid() {
     }
   }
 
-  for (int loop_time = 0; loop_time < timestep - 1; ++loop_time) {
+  for (int loop_time = 0; loop_time < time_step - 1; ++loop_time) {
     for (int loop_h = 0; loop_h < height; ++loop_h) {
       for (int loop_w = 0; loop_w < width; ++loop_w) {
         auto mstate = graph[1 + loop_w + loop_h * width + loop_time * width * height];
@@ -103,11 +102,11 @@ int GameEnv::read_from_grid() {
             case 3: to_position += 1; break;
           }
           auto maction = new GameAction;
-          maction->action_id = mstate->actions.size();
+          maction->action_id = static_cast<int>(mstate->actions.size());
           for (int loop_tran = 0; loop_tran < transition_pro_num; ++loop_tran) {
-            if (loop_tran + loop_time + 1 >= timestep) break;
+            if (loop_tran + loop_time + 1 >= time_step) break;
             auto mtran = new GameTransition;
-            mtran->transition_id = maction->transitions.size();
+            mtran->transition_id = static_cast<int>(maction->transitions.size());
             mtran->target = graph[to_position + (loop_tran + 1) * position_num];
             maction->transitions.push_back(mtran);
           }
@@ -117,11 +116,11 @@ int GameEnv::read_from_grid() {
         // 额外动作
         for (int loop_ext = 0; loop_ext < ext_action_num; ++loop_ext) {
           auto maction = new GameAction;
-          maction->action_id = mstate->actions.size();
+          maction->action_id = static_cast<int>(mstate->actions.size());
           for (int loop_tran = 0; loop_tran < transition_pro_num; ++loop_tran) {
-            if (loop_tran + loop_time + 1 >= timestep) break;
+            if (loop_tran + loop_time + 1 >= time_step) break;
             auto mtran = new GameTransition;
-            mtran->transition_id = maction->transitions.size();
+            mtran->transition_id = static_cast<int>(maction->transitions.size());
             mtran->target = graph[mstate->state_id + (1 + loop_tran) * width * height];
             maction->transitions.push_back(mtran);
           }
@@ -134,7 +133,7 @@ int GameEnv::read_from_grid() {
   // 最后一层
   for (int loop_h = 0; loop_h < height; ++loop_h) {
     for (int loop_w = 0; loop_w < width; ++loop_w) {
-      auto mstate = graph[1 + width * height * (timestep - 1) + loop_h * width + loop_w];
+      auto mstate = graph[1 + width * height * (time_step - 1) + loop_h * width + loop_w];
       auto maction = new GameAction;
       maction->action_id = 0;
       auto mtran = new GameTransition;
