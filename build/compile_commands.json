@@ -1,0 +1,17 @@
+[
+{
+  "directory": "/home/ink19/TrafficPlatform/TrafficRun/build",
+  "command": "/usr/bin/c++   -std=gnu++1z -o CMakeFiles/TrafficRun.dir/main.cpp.o -c /home/ink19/TrafficPlatform/TrafficRun/main.cpp",
+  "file": "/home/ink19/TrafficPlatform/TrafficRun/main.cpp"
+},
+{
+  "directory": "/home/ink19/TrafficPlatform/TrafficRun/build",
+  "command": "/usr/bin/c++   -std=gnu++1z -o CMakeFiles/TrafficRun.dir/core/config.cpp.o -c /home/ink19/TrafficPlatform/TrafficRun/core/config.cpp",
+  "file": "/home/ink19/TrafficPlatform/TrafficRun/core/config.cpp"
+},
+{
+  "directory": "/home/ink19/TrafficPlatform/TrafficRun/build",
+  "command": "/usr/bin/c++   -std=gnu++1z -o CMakeFiles/TrafficRun.dir/core/gameenv.cpp.o -c /home/ink19/TrafficPlatform/TrafficRun/core/gameenv.cpp",
+  "file": "/home/ink19/TrafficPlatform/TrafficRun/core/gameenv.cpp"
+}
+]
