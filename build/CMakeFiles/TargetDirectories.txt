@@ -1,3 +1,0 @@
-/home/ink19/TrafficPlatform/TrafficRun/build/CMakeFiles/TrafficRun.dir
-/home/ink19/TrafficPlatform/TrafficRun/build/CMakeFiles/edit_cache.dir
-/home/ink19/TrafficPlatform/TrafficRun/build/CMakeFiles/rebuild_cache.dir

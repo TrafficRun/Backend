@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/TrafficRun.dir/main.cpp.o CMakeFiles/TrafficRun.dir/core/config.cpp.o CMakeFiles/TrafficRun.dir/core/gameenv.cpp.o -o TrafficRun 
