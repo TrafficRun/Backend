@@ -14,7 +14,6 @@ public:
   std::optional<int> agent_number;
 };
 
-// TODO Achieve
 extern std::vector<ParameterItemType> generate_game_env_config();
 
 class GameState;

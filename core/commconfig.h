@@ -9,11 +9,10 @@
 
 class GameConfig {
 public:
-  bool online;
+  std::optional<bool> online;
   std::optional<std::string> server;
   std::optional<int> port;
 };
 
-// TODO Achieve
 extern std::vector<ParameterItemType>  generate_game_config();
 #endif

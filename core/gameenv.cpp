@@ -1,6 +1,20 @@
 #include "gameenv.h"
 #include "commconfig.h"
-#include <stdio.h>
+
+#include <vector>
+
+extern std::vector<ParameterItemType> generate_game_env_config() {
+  std::vector<std::string> graph_type_list = {"grid"};
+  auto graph_type_ext = new ParameterBaseTypeEnumExtType;
+  graph_type_ext->items = graph_type_list;
+  std::vector<ParameterItemType> result = {
+    {"graph_file", "Graph File Path", ParameterBaseType_STRING, "test.data", nullptr},
+    {"graph_type", "Graph Type", ParameterBaseType_ENUM, 0, graph_type_ext},
+    {"time_step", "Time Step", ParameterBaseType_INT, 20, nullptr},
+    {"agent_number", "Agent Number", ParameterBaseType_INT, 20, nullptr}
+  };
+  return result;
+}
 
 GameEnv::GameEnv(GameEnvConfig& config):
   config(config)

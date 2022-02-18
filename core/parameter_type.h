@@ -18,7 +18,8 @@ enum ParameterBaseType {
   ParameterBaseType_FLOAT = 1,
   ParameterBaseType_STRING = 2,
   ParameterBaseType_RANGE = 3,
-  ParameterBaseType_ENUM = 4
+  ParameterBaseType_ENUM = 4,
+  ParameterBaseType_BOOL = 5
 };
 
 struct ParameterBaseTypeRangeExtType {
@@ -36,6 +37,7 @@ struct ParameterItemType {
   std::string description;
   ParameterBaseType type;
   boost::any default_value;
+  void *ext_slot;
 };
 
 #endif
