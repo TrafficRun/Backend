@@ -2,7 +2,20 @@
 #define _CORE_GAME_ENV_H
 
 #include <vector>
-#include "config.h"
+#include "commconfig.h"
+#include "parameter_type.h"
+
+class GameEnvConfig {
+public:
+  std::optional<std::string> graph_file;
+  std::optional<std::string> graph_type;
+
+  std::optional<int> time_step;
+  std::optional<int> agent_number;
+};
+
+// TODO Achieve
+extern std::vector<ParameterItemType> generate_game_env_config();
 
 class GameState;
 typedef GameState* GameStatePtr;
@@ -56,7 +69,7 @@ typedef GameAgent* GameAgentPtr;
 
 class GameEnv {
 public:
-  GameEnv(GameConfig& config);
+  GameEnv(GameEnvConfig& config);
   std::vector<GameStatePtr> graph;
   std::vector<std::vector<GameStatePtr>> position_graph;
   std::vector<std::vector<GameStatePtr>> time_step_graph;
@@ -65,7 +78,7 @@ public:
   int position_num;
   int time_step;
   int agent_number;
-  GameConfig& config;
+  GameEnvConfig& config;
 private:
   int read_from_grid();
 };

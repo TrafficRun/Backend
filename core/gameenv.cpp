@@ -1,8 +1,8 @@
 #include "gameenv.h"
-#include "config.h"
+#include "commconfig.h"
 #include <stdio.h>
 
-GameEnv::GameEnv(GameConfig& config):
+GameEnv::GameEnv(GameEnvConfig& config):
   config(config)
 {
   time_step = config.time_step.value();
