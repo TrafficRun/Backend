@@ -7,6 +7,7 @@
 
 class GameEnvConfig {
 public:
+  GameEnvConfig(GameConfig& config);
   std::optional<std::string> graph_file;
   std::optional<std::string> graph_type;
 
@@ -26,8 +27,12 @@ public:
 
 class GameTransition {
 public:
-  GameTransition();
-  ~GameTransition();
+  GameTransition(){};
+  ~GameTransition() {
+    if (ext_slot != nullptr) {
+      delete ext_slot;
+    }
+  };
   GameStatePtr target;
   int transition_id;
   GameExtType *ext_slot = nullptr;
@@ -37,8 +42,16 @@ typedef GameTransition* GameTransitionPtr;
 
 class GameAction {
 public:
-  GameAction();
-  ~GameAction();
+  GameAction(){};
+  ~GameAction() {
+    for (auto item : transitions) {
+      delete item;
+    }
+
+    if (ext_slot != nullptr) {
+      delete ext_slot;
+    }
+  };
   int action_id;
   std::vector<GameTransitionPtr> transitions;
   GameExtType *ext_slot = nullptr;
@@ -48,8 +61,15 @@ typedef GameAction* GameActionPtr;
 
 class GameState {
 public:
-  GameState();
-  ~GameState();
+  GameState(){};
+  ~GameState() {
+    for (auto item : actions) {
+      delete item;
+    }
+    if (ext_slot != nullptr) {
+      delete ext_slot;
+    }
+  };
   int state_id;
   int position_id;
   std::vector<GameActionPtr> actions;
@@ -68,16 +88,24 @@ typedef GameAgent* GameAgentPtr;
 
 class GameReward {
 public:
-  GameReward();
-  ~GameReward();
-  int time_step;
-  int position_id;
-  int state_id;
+  GameReward() {};
+  ~GameReward() {
+    if (ext_slot != nullptr) {
+      delete ext_slot;
+    }
+  };
+  GameStatePtr state;
+  GameExtType *ext_slot = nullptr;
 };
 
 class GameEnv {
 public:
-  GameEnv(GameEnvConfig& config);
+  GameEnv(GameConfig& config);
+  ~GameEnv() {
+    for (auto item : graph) {
+      delete item;
+    }
+  }
   std::vector<GameStatePtr> graph;
   std::vector<std::vector<GameStatePtr>> position_graph;
   std::vector<std::vector<GameStatePtr>> time_step_graph;
@@ -87,7 +115,7 @@ public:
   int position_num;
   int time_step;
   int agent_number;
-  GameEnvConfig& config;
+  GameEnvConfig config;
 private:
   int read_from_grid();
 };

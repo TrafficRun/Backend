@@ -1,5 +1,8 @@
 #include "core_run.h"
 #include "globalvar.h"
+
+#include <algorithm>
+#include <numeric>
 #include <iostream>
 
 CoreRun::CoreRun(GameConfig& config, GameEnv& env) : 

@@ -9,7 +9,7 @@ extern std::vector<ParameterItemType> generate_game_env_config() {
   graph_type_ext.items = graph_type_list;
 
   std::vector<ParameterItemType> result = {
-    {"graph_file", "Graph File Path", ParameterBaseType_STRING, "test.data", {}},
+    {"graph_file", "Graph File Path", ParameterBaseType_STRING, std::string("test.data"), {}},
     {"graph_type", "Graph Type", ParameterBaseType_ENUM, 0, graph_type_ext},
     {"time_step", "Time Step", ParameterBaseType_INT, 20, {}},
     {"agent_number", "Agent Number", ParameterBaseType_INT, 20, {}}
@@ -17,8 +17,15 @@ extern std::vector<ParameterItemType> generate_game_env_config() {
   return result;
 }
 
-GameEnv::GameEnv(GameEnvConfig& config):
-  config(config)
+GameEnvConfig::GameEnvConfig(GameConfig& config) {
+  graph_file = boost::any_cast<std::string>(config.ext_config["env"]["graph_file"]);
+  graph_type = boost::any_cast<std::string>(config.ext_config["env"]["graph_type"]);
+  time_step = boost::any_cast<int>(config.ext_config["env"]["time_step"]);
+  agent_number = boost::any_cast<int>(config.ext_config["env"]["agent_number"]);
+}
+
+GameEnv::GameEnv(GameConfig& _config):
+  config(_config)
 {
   time_step = config.time_step.value();
   agent_number = config.agent_number.value();
@@ -52,6 +59,8 @@ int GameEnv::read_from_grid() {
   for (int loop_i = 0; loop_i < time_step * width * height * action_num * transition_pro_num; ++loop_i) {
     fscanf(graph_fp, "%lf", action_transition_pro + loop_i);
   }
+  delete []action_reward;
+  delete []action_transition_pro;
   fclose(graph_fp);
 
   for (int loop_i = 0; loop_i < time_step; ++loop_i) {

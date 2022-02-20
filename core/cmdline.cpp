@@ -11,6 +11,8 @@
 
 #include <iostream>
 
+
+
 CMDLine::CMDLine() :
   cmd_options("Traffic Run")
 {
@@ -81,6 +83,29 @@ int CMDLine::generate_parser(boost::program_options::options_description& option
   return 0;
 }
 
+boost::any CMDLine::get_value(const boost::program_options::variable_value& data, const ParameterItemType& item) {
+  switch (item.type) {
+    case ParameterBaseType_BOOL:
+      return !data.empty();
+    case ParameterBaseType_ENUM:
+      return data.as<std:: string>();
+    case ParameterBaseType_FLOAT:
+      return data.as<double>();
+    case ParameterBaseType_INT:
+      return data.as<int>();
+    case ParameterBaseType_RANGE: {
+      auto ext_data = boost::any_cast<ParameterBaseTypeRangeExtType>(item.ext_slot.value());
+      if (ext_data.is_continue) {
+        return data.as<double>();
+      } else {
+        return data.as<int>();
+      }
+    }
+    case ParameterBaseType_STRING:
+      return data.as<std::string>();
+  };
+}
+
 int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
   boost::program_options::variables_map var_map;
   try {
@@ -90,21 +115,26 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
     std::exit(-1);
   }
 
-  // global config
+  // game config
   config.online = (var_map.count("online") >= 1);
   config.port = var_map["port"].as<int>();
   config.server = var_map["server"].as<std::string>();
   config.model_name = var_map["model_name"].as<std::string>();
   config.generator_name = var_map["generator_name"].as<std::string>();
 
+  // TODO 改成插件模式
+  // game env config
+  auto game_env_config_info = generate_game_env_config();
+  std::map<std::string, boost::any> game_env_config;
+  for (const auto& param_item : game_env_config_info) {
+    game_env_config[param_item.name] = get_value(var_map[param_item.name], param_item);
+  }
+  config.ext_config["env"] = game_env_config;
+
   for (const auto& model_item : global_var.models) {
     std::map<std::string, boost::any> model_config;
     for (const auto &param_item : model_item.parameters) {
-      if (param_item.type == ParameterBaseType_BOOL) {
-        model_config[param_item.name] = (var_map.count(param_item.name) >= 1);
-      } else {
-        model_config[param_item.name] = var_map[param_item.name];
-      }
+      model_config[param_item.name] = get_value(var_map[param_item.name], param_item);
     }
     config.ext_config[model_item.model_name] = model_config;
   }

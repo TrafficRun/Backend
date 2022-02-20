@@ -10,15 +10,15 @@
 class ModelBaseType {
 public:
   ModelBaseType(){};
-  virtual int run(int now_time) {return 0;}
-  virtual ~ModelBaseType();
+  virtual int run(int now_time) { return 0; }
+  virtual ~ModelBaseType() {};
 };
 
 class GeneratorBaseType {
 public:
   GeneratorBaseType(){};
-  virtual int generate(int now_time);
-  virtual ~GeneratorBaseType();
+  virtual int generate(int now_time) { return 0; };
+  virtual ~GeneratorBaseType() {};
 };
 
 enum ParameterBaseType {

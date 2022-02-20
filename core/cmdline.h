@@ -11,7 +11,8 @@ public:
   int generate_cmd_line();
   int parse_cmd(int argc,char *argv[], GameConfig& config);
 private:
-  int generate_parser(boost::program_options::options_description& options, const ParameterItemType& item); 
+  int generate_parser(boost::program_options::options_description& options, const ParameterItemType& item);
+  boost::any get_value(const boost::program_options::variable_value& data, const ParameterItemType& item);
   boost::program_options::options_description cmd_options;
 };
 

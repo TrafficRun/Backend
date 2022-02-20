@@ -31,7 +31,7 @@ extern std::vector<ParameterItemType>  generate_game_config() {
 
   result = {
     {"online", "whether web", ParameterBaseType_BOOL, {}, {}},
-    {"server", "server name", ParameterBaseType_STRING, "127.0.0.1", {}},
+    {"server", "server name", ParameterBaseType_STRING, std::string("127.0.0.1"), {}},
     {"port", "listen port", ParameterBaseType_INT, 53434, {}},
     {"model_name", "模型名字", ParameterBaseType_ENUM, 0, model_name_enum_ext},
     {"generator_name", "生成器名字", ParameterBaseType_ENUM, 0, generator_name_enum_ext}

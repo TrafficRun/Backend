@@ -41,4 +41,7 @@ foreach(MFILE ${REWARD_FILES})
   endif()
 endforeach()
 
+find_package(Boost REQUIRED program_options system chrono atomic timer json)
+
 add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${CORE_SOURCE_FILES} ${CORE_HEADER_FILES} ${MODELS_SRC} ${MODELS_HEADER} ${REWARD_GENS_SRC} ${REWARD_GENS_SRC})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
