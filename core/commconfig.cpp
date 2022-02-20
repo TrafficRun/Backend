@@ -8,18 +8,33 @@ extern std::vector<ParameterItemType>  generate_game_config() {
   std::vector<ParameterItemType> result;
   std::vector<std::string> models_name = std::accumulate(
     global_var.models.begin(), 
-    global_var.models.begin(), 
+    global_var.models.end(), 
     std::vector<std::string>(), [](std::vector<std::string> &data, const ModelType& a){
       data.push_back(a.model_name);
       return data;
   });
-  auto enum_ext = new ParameterBaseTypeEnumExtType;
-  enum_ext->items = models_name;
+  ParameterBaseTypeEnumExtType model_name_enum_ext;
+  model_name_enum_ext.items = models_name;
+  
+  std::vector<std::string> generators_name = std::accumulate(
+    global_var.generators.begin(),
+    global_var.generators.end(),
+    std::vector<std::string>(),
+    [](std::vector<std::string>& data, const GeneratorType& a) {
+      data.push_back(a.generator_name);
+      return data;
+    }
+  );
+
+  ParameterBaseTypeEnumExtType generator_name_enum_ext;
+  generator_name_enum_ext.items = generators_name;
+
   result = {
-    {"online", "whether web", ParameterBaseType_BOOL, {}, nullptr},
-    {"server", "server name", ParameterBaseType_STRING, "127.0.0.1", nullptr},
-    {"port", "listen port", ParameterBaseType_INT, 53434, nullptr},
-    {"model_type", "模型列表", ParameterBaseType_ENUM, 1, enum_ext}
+    {"online", "whether web", ParameterBaseType_BOOL, {}, {}},
+    {"server", "server name", ParameterBaseType_STRING, "127.0.0.1", {}},
+    {"port", "listen port", ParameterBaseType_INT, 53434, {}},
+    {"model_name", "模型名字", ParameterBaseType_ENUM, 0, model_name_enum_ext},
+    {"generator_name", "生成器名字", ParameterBaseType_ENUM, 0, generator_name_enum_ext}
   };
   return result;
 }

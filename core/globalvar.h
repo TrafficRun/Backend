@@ -13,13 +13,23 @@ struct ModelType {
   generate_model_func_type generate_func;
 };
 
+typedef GeneratorBaseType* (*generate_generator_fun_type)(GameConfig& config, GameEnv& env);
+
+struct GeneratorType {
+  std::string generator_name;
+  std::vector<ParameterItemType> parameters;
+  generate_generator_fun_type generate_func;
+};
+
 class GlobalVar {
 public:
   std::vector<ModelType> models;
+  std::vector<GeneratorType> generators;
 };
 
 extern GlobalVar global_var;
 
-//TODO Achieve
 extern int register_model(const ModelType& model_info);
+extern int register_generator(const GeneratorType &generator_info);
+
 #endif

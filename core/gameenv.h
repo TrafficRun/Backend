@@ -66,6 +66,15 @@ public:
 
 typedef GameAgent* GameAgentPtr;
 
+class GameReward {
+public:
+  GameReward();
+  ~GameReward();
+  int time_step;
+  int position_id;
+  int state_id;
+};
+
 class GameEnv {
 public:
   GameEnv(GameEnvConfig& config);
@@ -74,6 +83,7 @@ public:
   std::vector<std::vector<GameStatePtr>> time_step_graph;
 
   std::vector<GameAgentPtr> agents;
+  std::vector<GameReward> rewards;
   int position_num;
   int time_step;
   int agent_number;

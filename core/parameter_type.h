@@ -5,12 +5,20 @@
 #include <vector>
 #include <map>
 #include <boost/any.hpp>
+#include <optional>
 
 class ModelBaseType {
 public:
   ModelBaseType(){};
-  virtual int run() {return 0;}
+  virtual int run(int now_time) {return 0;}
   virtual ~ModelBaseType();
+};
+
+class GeneratorBaseType {
+public:
+  GeneratorBaseType(){};
+  virtual int generate(int now_time);
+  virtual ~GeneratorBaseType();
 };
 
 enum ParameterBaseType {
@@ -37,7 +45,7 @@ struct ParameterItemType {
   std::string description;
   ParameterBaseType type;
   boost::any default_value;
-  void *ext_slot;
+  std::optional<boost::any> ext_slot;
 };
 
 #endif

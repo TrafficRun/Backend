@@ -6,6 +6,10 @@
 
 #include <boost/program_options.hpp>
 #include <boost/any.hpp>
+#include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
+
+#include <iostream>
 
 CMDLine::CMDLine() :
   cmd_options("Traffic Run")
@@ -49,15 +53,18 @@ int CMDLine::generate_parser(boost::program_options::options_description& option
         item.description.c_str()
       );
     break;
-    case ParameterBaseType_ENUM:
+    case ParameterBaseType_ENUM: {
+      const auto& ext_data = boost::any_cast<ParameterBaseTypeEnumExtType>(item.ext_slot.value());
+      std::string enum_list = boost::algorithm::join(ext_data.items, ", ");
       options.add_options()(item.name.c_str(),
-        boost::program_options::value<std::string>()->default_value(boost::any_cast<std::string>(item.default_value)),
-        item.description.c_str()
+        boost::program_options::value<std::string>()->default_value(ext_data.items[boost::any_cast<int>(item.default_value)]),
+        (item.description + (boost::format(". Optional: %s")%enum_list).str()).c_str()
       );
+    }
     break;
-    case ParameterBaseType_RANGE:{
-      auto ext_data = static_cast<ParameterBaseTypeRangeExtType*>(item.ext_slot);
-      if (ext_data->is_continue) {
+    case ParameterBaseType_RANGE: {
+      auto ext_data = boost::any_cast<ParameterBaseTypeRangeExtType>(item.ext_slot.value());
+      if (ext_data.is_continue) {
         options.add_options()(item.name.c_str(), boost::program_options::value<float>()->default_value(boost::any_cast<float>(item.default_value)), item.description.c_str());
       } else {
         options.add_options()(item.name.c_str(), boost::program_options::value<int>()->default_value(boost::any_cast<int>(item.default_value)), item.description.c_str());
@@ -70,6 +77,36 @@ int CMDLine::generate_parser(boost::program_options::options_description& option
         item.description.c_str()
       );
     break;
+  }
+  return 0;
+}
+
+int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
+  boost::program_options::variables_map var_map;
+  try {
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmd_options), var_map);
+  } catch (std::exception &e) {
+    std::cout << e.what() << std::endl;
+    std::exit(-1);
+  }
+
+  // global config
+  config.online = (var_map.count("online") >= 1);
+  config.port = var_map["port"].as<int>();
+  config.server = var_map["server"].as<std::string>();
+  config.model_name = var_map["model_name"].as<std::string>();
+  config.generator_name = var_map["generator_name"].as<std::string>();
+
+  for (const auto& model_item : global_var.models) {
+    std::map<std::string, boost::any> model_config;
+    for (const auto &param_item : model_item.parameters) {
+      if (param_item.type == ParameterBaseType_BOOL) {
+        model_config[param_item.name] = (var_map.count(param_item.name) >= 1);
+      } else {
+        model_config[param_item.name] = var_map[param_item.name];
+      }
+    }
+    config.ext_config[model_item.model_name] = model_config;
   }
   return 0;
 }
