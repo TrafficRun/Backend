@@ -2,8 +2,9 @@
 #include "commconfig.h"
 
 #include <vector>
+#include "globalvar.h"
 
-extern std::vector<ParameterItemType> generate_game_env_config() {
+extern int register_game_env_config() {
   std::vector<std::string> graph_type_list = {"grid"};
   ParameterBaseTypeEnumExtType graph_type_ext;
   graph_type_ext.items = graph_type_list;
@@ -14,7 +15,9 @@ extern std::vector<ParameterItemType> generate_game_env_config() {
     {"time_step", "Time Step", ParameterBaseType_INT, 20, {}},
     {"agent_number", "Agent Number", ParameterBaseType_INT, 20, {}}
   };
-  return result;
+  
+  global_var.game_env_parameters = result;
+  return 0;
 }
 
 GameEnvConfig::GameEnvConfig(GameConfig& config) {

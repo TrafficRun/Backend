@@ -25,6 +25,9 @@ class GlobalVar {
 public:
   std::vector<ModelType> models;
   std::vector<GeneratorType> generators;
+  
+  std::vector<ParameterItemType> global_parameters;
+  std::vector<ParameterItemType> game_env_parameters;
 };
 
 extern GlobalVar global_var;

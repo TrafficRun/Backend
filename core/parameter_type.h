@@ -6,6 +6,7 @@
 #include <map>
 #include <boost/any.hpp>
 #include <optional>
+#include <boost/json.hpp>
 
 class ModelBaseType {
 public:
@@ -30,6 +31,8 @@ enum ParameterBaseType {
   ParameterBaseType_BOOL = 5
 };
 
+extern const std::vector<std::string> parameter_base_type_string;
+
 struct ParameterBaseTypeRangeExtType {
   int max;
   int min;
@@ -48,4 +51,7 @@ struct ParameterItemType {
   std::optional<boost::any> ext_slot;
 };
 
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, ParameterItemType const &c);
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, const ParameterBaseTypeRangeExtType& c);
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, const ParameterBaseTypeEnumExtType& c);
 #endif

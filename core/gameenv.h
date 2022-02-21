@@ -15,7 +15,7 @@ public:
   std::optional<int> agent_number;
 };
 
-extern std::vector<ParameterItemType> generate_game_env_config();
+extern int register_game_env_config();
 
 class GameState;
 typedef GameState* GameStatePtr;

@@ -16,8 +16,8 @@
 CMDLine::CMDLine() :
   cmd_options("Traffic Run")
 {
-  auto game_config = generate_game_config();
-  auto game_env_config = generate_game_env_config();
+  auto game_config = global_var.global_parameters;
+  auto game_env_config = global_var.game_env_parameters;
 
   boost::program_options::options_description game_config_desc("Game Config");
   for (const auto& item : game_config) {
@@ -141,7 +141,7 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
 
   // TODO 改成插件模式
   // game env config
-  auto game_env_config_info = generate_game_env_config();
+  auto game_env_config_info = global_var.game_env_parameters;
   std::map<std::string, boost::any> game_env_config;
   for (const auto& param_item : game_env_config_info) {
     game_env_config[param_item.name] = get_value(var_map[param_item.name], param_item);

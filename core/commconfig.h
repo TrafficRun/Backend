@@ -21,5 +21,5 @@ public:
   std::map<std::string, std::map<std::string, boost::any>> ext_config;
 };
 
-extern std::vector<ParameterItemType>  generate_game_config();
+extern int register_game_config();
 #endif

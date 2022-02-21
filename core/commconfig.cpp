@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <numeric>
 
-extern std::vector<ParameterItemType>  generate_game_config() {
+extern int register_game_config() {
   std::vector<ParameterItemType> result;
   std::vector<std::string> models_name = std::accumulate(
     global_var.models.begin(), 
@@ -36,5 +36,7 @@ extern std::vector<ParameterItemType>  generate_game_config() {
     {"model_name", "模型名字", ParameterBaseType_ENUM, 0, model_name_enum_ext},
     {"generator_name", "生成器名字", ParameterBaseType_ENUM, 0, generator_name_enum_ext}
   };
-  return result;
+  global_var.global_parameters = result;
+
+  return 0;
 }

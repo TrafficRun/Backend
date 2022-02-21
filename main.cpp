@@ -10,12 +10,15 @@
 int main (int argc, char *argv[]) {
   register_random_generator();
   register_simple_random_model();
+  register_game_env_config();
+  register_game_config();
+
   CMDLine cmd;
   GameConfig config;
 
   cmd.parse_cmd(argc, argv, config);
 
-  if (config.online) {
+  if (config.online.value()) {
     HttpServer serv(config);
     serv.run();
     return 0;

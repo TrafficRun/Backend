@@ -5,6 +5,11 @@
 #include "cpp-httplib/httplib.h"
 
 #include <functional>
+#include <string>
+
+#include <boost/json.hpp>
+
+const static std::string http_json_mine_type = "application/json";
 
 HttpServer::HttpServer(GameConfig& config) : config(config) {}
 
@@ -16,5 +21,9 @@ int HttpServer::run() {
 }
 
 void HttpServer::http_get_common_config(const httplib::Request& req, httplib::Response& rsp) {
-  rsp.set_content("Hello World!", "text/plain");
+  boost::json::value result = boost::json::value({
+    {"global", global_var.global_parameters},
+    {"env", global_var.game_env_parameters}
+  });
+  rsp.set_content(boost::json::serialize(result), http_json_mine_type.c_str());
 }
