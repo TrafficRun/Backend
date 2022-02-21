@@ -32,6 +32,11 @@ GameEnv::GameEnv(GameConfig& _config):
   if (config.graph_type.value() == "grid") {
     read_from_grid();
   }
+  for (int loop_i = 0; loop_i < agent_number; ++loop_i) {
+     GameAgentPtr magent = new GameAgent;
+     magent->state = graph[0];
+     agents.push_back(magent);
+  }
 }
 
 int GameEnv::read_from_grid() {

@@ -11,9 +11,14 @@ file(GLOB HEADER_FILES ./*.h)
 
 include_directories(./)
 include_directories(./core/)
+
 # 核心文件
 aux_source_directory(./core/ CORE_SOURCE_FILES)
 file(GLOB CORE_HEADER_FILES ./core/*.h)
+
+# 网络
+aux_source_directory(./net/ NET_SOURCE_FILES)
+file(GLOB NET_HEADER_FILES ./net/*.h)
 
 # 模型文件夹
 file(GLOB MODEL_FILES true ./model/*)
@@ -43,5 +48,12 @@ endforeach()
 
 find_package(Boost REQUIRED program_options system chrono atomic timer json)
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} ${CORE_SOURCE_FILES} ${CORE_HEADER_FILES} ${MODELS_SRC} ${MODELS_HEADER} ${REWARD_GENS_SRC} ${REWARD_GENS_SRC})
+add_executable(${PROJECT_NAME} 
+  ${SOURCE_FILES} 
+  ${CORE_SOURCE_FILES} ${CORE_HEADER_FILES} 
+  ${MODELS_SRC} ${MODELS_HEADER} 
+  ${REWARD_GENS_SRC} ${REWARD_GENS_SRC}
+  ${NET_SOURCE_FILES} ${NET_HEADER_FILES}
+)
+
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})

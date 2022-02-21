@@ -23,8 +23,10 @@ CMDLine::CMDLine() :
   for (const auto& item : game_config) {
     generate_parser(game_config_desc, item);
   }
+
+  game_config_desc.add_options()("h,help", "Get Help");
   cmd_options.add(game_config_desc);
-  
+
   boost::program_options::options_description game_env_config_desc("Game Env Config");
   for (const auto& item : game_env_config) {
     generate_parser(game_env_config_desc, item);
@@ -38,6 +40,15 @@ CMDLine::CMDLine() :
       generate_parser(model_item_config_desc, item);
     }
     cmd_options.add(model_item_config_desc);
+  }
+
+  for (int loop_i = 0; loop_i < global_var.generators.size(); ++loop_i) {
+    const auto& generator_item = global_var.generators[loop_i];
+    boost::program_options::options_description generator_item_config_desc(generator_item.generator_name);
+    for (const auto& item : generator_item.parameters) {
+      generate_parser(generator_item_config_desc, item);
+    }
+    cmd_options.add(generator_item_config_desc);
   }
 }
 
@@ -112,7 +123,13 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
     boost::program_options::store(boost::program_options::parse_command_line(argc, argv, cmd_options), var_map);
   } catch (std::exception &e) {
     std::cout << e.what() << std::endl;
+    std::cout << cmd_options;
     std::exit(-1);
+  }
+
+  if (var_map.count("help") >= 1) {
+    std::cout << cmd_options;
+    std::exit(0);
   }
 
   // game config
@@ -137,6 +154,14 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
       model_config[param_item.name] = get_value(var_map[param_item.name], param_item);
     }
     config.ext_config[model_item.model_name] = model_config;
+  }
+
+  for (const auto& generator_item : global_var.generators) {
+    std::map<std::string, boost::any> generator_config;
+    for (const auto &param_item : generator_item.parameters) {
+      generator_config[param_item.name] = get_value(var_map[param_item.name], param_item);
+    }
+    config.ext_config[generator_item.generator_name] = generator_config;
   }
   return 0;
 }

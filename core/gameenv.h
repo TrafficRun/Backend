@@ -78,8 +78,10 @@ public:
 
 class GameAgent {
 public:
-  GameAgent();
-  ~GameAgent();
+  GameAgent() {};
+  ~GameAgent() {
+    if (ext_slot != nullptr) delete ext_slot;
+  };
   GameStatePtr state;
   GameExtType *ext_slot = nullptr;
 };
