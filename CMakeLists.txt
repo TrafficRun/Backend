@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+find_package(Boost REQUIRED program_options system chrono atomic timer json)
+find_package(Threads REQUIRED)
+
 # 普通文件
 aux_source_directory(. SOURCE_FILES)
 file(GLOB HEADER_FILES ./*.h)
@@ -17,8 +20,8 @@ aux_source_directory(./core/ CORE_SOURCE_FILES)
 file(GLOB CORE_HEADER_FILES ./core/*.h)
 
 # 网络
-aux_source_directory(./net/ NET_SOURCE_FILES)
-file(GLOB NET_HEADER_FILES ./net/*.h)
+aux_source_directory(./http/ NET_SOURCE_FILES)
+file(GLOB NET_HEADER_FILES ./http/*.h)
 
 # 模型文件夹
 file(GLOB MODEL_FILES true ./model/*)
@@ -46,8 +49,6 @@ foreach(MFILE ${REWARD_FILES})
   endif()
 endforeach()
 
-find_package(Boost REQUIRED program_options system chrono atomic timer json)
-
 add_executable(${PROJECT_NAME} 
   ${SOURCE_FILES} 
   ${CORE_SOURCE_FILES} ${CORE_HEADER_FILES} 
@@ -56,4 +57,4 @@ add_executable(${PROJECT_NAME}
   ${NET_SOURCE_FILES} ${NET_HEADER_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads)

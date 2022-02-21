@@ -5,6 +5,7 @@
 
 #include "core/cmdline.h"
 #include "core/core_run.h"
+#include "http/server.h"
 
 int main (int argc, char *argv[]) {
   register_random_generator();
@@ -13,6 +14,13 @@ int main (int argc, char *argv[]) {
   GameConfig config;
 
   cmd.parse_cmd(argc, argv, config);
+
+  if (config.online) {
+    HttpServer serv(config);
+    serv.run();
+    return 0;
+  }
+
   GameEnv env(config);
   CoreRun core(config, env);
   core.run();
