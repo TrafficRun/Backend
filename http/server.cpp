@@ -2,6 +2,7 @@
 #include "core/globalvar.h"
 #include "core/gameenv.h"
 #include "core/commconfig.h"
+#include "core/core_run.h"
 
 #include "cpp-httplib/httplib.h"
 
@@ -13,6 +14,7 @@
 #include <iostream>
 
 #include <boost/json.hpp>
+#include <boost/any.hpp>
 
 namespace bj = boost::json;
 namespace hl = httplib;
@@ -50,7 +52,7 @@ void HttpServer::http_get_common_config(const req_type& req, rsp_type& rsp) {
     {"global", temp_global_parameters},
     {"env", global_var.game_env_parameters}
   });
-  rsp.set_content(bj::serialize(result), http_json_mine_type);
+  rsp.set_content(result_from(0, result), http_json_mine_type);
 }
 
 void HttpServer::http_get_model_config(const req_type& req, rsp_type& rsp) {
@@ -59,16 +61,63 @@ void HttpServer::http_get_model_config(const req_type& req, rsp_type& rsp) {
     return item.model_name == model_name;
   });
   if (model_config_iter == global_var.models.end()) {
-    rsp.set_content(bj::serialize(bj::value({
-      {"code", -1},
-      {"data", nullptr}
-    })) , http_json_mine_type);
+    rsp.set_content(result_from(-1, bj::value_from(nullptr)), http_json_mine_type);
     return;
   }
-  rsp.set_content(bj::serialize(bj::value({
-    {"code", 0},
-    {"data", model_config_iter->parameters}
-  })), http_json_mine_type);
+  rsp.set_content(result_from(0, bj::value_from(model_config_iter->parameters)), http_json_mine_type);
+}
+
+void HttpServer::http_get_generator_config(const req_type& req, rsp_type& rsp) {
+  std::string generator_name = req.get_param_value("generator_name");
+  auto generator_config_iter = std::find_if(global_var.generators.begin(), global_var.generators.end(), [&](const GeneratorType& item) {
+    return item.generator_name == generator_name;
+  });
+  
+  if (generator_config_iter == global_var.generators.end()) {
+    rsp.set_content(result_from(-1, bj::value_from(nullptr)), http_json_mine_type);
+    return;
+  }
+
+  rsp.set_content(result_from(0, bj::value_from(generator_config_iter->parameters)), http_json_mine_type);
+}
+
+void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
+  auto model_name = req.get_param_value("model_name");
+  auto generator_name = req.get_param_value("generator_name");
+  
+  config.model_name = model_name;
+  config.generator_name = generator_name;
+  
+  auto model_config = global_var.get_model_config(model_name);
+  auto generator_config = global_var.get_generator_config(generator_name);
+  
+  // set model config
+  std::map<std::string, boost::any> model_set_config;
+  for (int loop_i = 0; loop_i < model_config.parameters.size(); ++loop_i) {
+    const auto& param_item = model_config.parameters[loop_i];
+    model_set_config[param_item.name] = get_param(req.get_param_value(param_item.name.c_str()), param_item);
+  }
+  config.ext_config[model_name] = model_set_config;
+
+  // set generator config
+  std::map<std::string, boost::any> generator_set_config;
+  for (int loop_i = 0; loop_i < generator_config.parameters.size(); ++loop_i) {
+    const auto& param_item = generator_config.parameters[loop_i];
+    generator_set_config[param_item.name] = get_param(req.get_param_value(param_item.name.c_str()), param_item);
+  }
+  config.ext_config[generator_name] = generator_set_config;
+
+  // set env config
+  std::map<std::string, boost::any> env_set_config;
+  const auto& env_config = global_var.game_env_parameters;
+  for (int loop_i = 0; loop_i < env_config.size(); ++loop_i) {
+    const auto param_item = env_config[loop_i];
+    env_set_config[param_item.name] = get_param(req.get_param_value(param_item.name.c_str()), param_item);
+  }
+  config.ext_config["env"] = env_set_config;
+
+  begin_simulate();
+  rsp.set_content(result_from(0, nullptr), http_json_mine_type);
 }
 
 void HttpServer::logger(const req_type&req, const rsp_type& rsp) {
@@ -81,4 +130,47 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
     {"code", code},
     {"data", data}
   }));
+}
+
+boost::any HttpServer::get_param(const std::string& value, const ParameterItemType& item) {
+  boost::any result;
+  switch (item.type) {
+    case ParameterBaseType_BOOL:
+      if (value == "1") {
+        result = true;
+      } else {
+        result = false;
+      }
+    break;
+    case ParameterBaseType_ENUM:
+      result = value;
+    break;
+    case ParameterBaseType_FLOAT:
+      result = std::atof(value.c_str());
+    break;
+    case ParameterBaseType_INT:
+      result = std::atoi(value.c_str());
+    break;
+    case ParameterBaseType_STRING:
+      result = value;
+    break;
+    case ParameterBaseType_RANGE: {
+      const auto& ext_data = boost::any_cast<ParameterBaseTypeRangeExtType>(item.ext_slot);
+      if (ext_data.is_continue) {
+        result = std::atof(value.c_str());
+      } else {
+        result = std::atoi(value.c_str());
+      }
+    }
+    break;
+  }
+  return result;
+}
+
+void HttpServer::begin_simulate() {
+  run_thread = std::thread([&](){
+    GameEnv env(config);
+    CoreRun core(config, env);
+    core.run(); 
+  });
 }

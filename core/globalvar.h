@@ -27,6 +27,8 @@ public:
   std::vector<GeneratorType> generators;
   std::vector<ParameterItemType> global_parameters;
   std::vector<ParameterItemType> game_env_parameters;
+  const ModelType &get_model_config(const std::string& model_name);
+  const GeneratorType& get_generator_config(const std::string& generator_name);
 };
 
 extern GlobalVar global_var;

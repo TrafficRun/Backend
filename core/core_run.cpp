@@ -21,7 +21,7 @@ int CoreRun::run() {
     std::exit(-1);
   }
   ModelBaseType *model_obj = model_config->generate_func(config, env);
-  
+
   const auto& generator_config = std::find_if(global_var.generators.begin(), global_var.generators.end(), [&](const GeneratorType& item) {
     return item.generator_name == config.generator_name;
   });
