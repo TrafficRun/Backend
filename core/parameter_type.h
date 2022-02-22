@@ -54,4 +54,5 @@ struct ParameterItemType {
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, ParameterItemType const &c);
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, const ParameterBaseTypeRangeExtType& c);
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, const ParameterBaseTypeEnumExtType& c);
+
 #endif

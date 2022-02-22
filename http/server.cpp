@@ -132,6 +132,20 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
   }));
 }
 
+void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
+  int time_step = std::atoi(req.get_param_value("time_step").c_str());
+  auto result_data = env->snapshot->get(time_step);
+  if (result_data.has_value()) {
+    rsp.set_content(result_from(0, bj::value_from(result_data.value())), http_json_mine_type);
+  } else {
+    rsp.set_content(result_from(-1, bj::value(nullptr)), http_json_mine_type);
+  }
+}
+
+HttpServer::~HttpServer() {
+  delete env;
+}
+
 boost::any HttpServer::get_param(const std::string& value, const ParameterItemType& item) {
   boost::any result;
   switch (item.type) {
@@ -169,8 +183,11 @@ boost::any HttpServer::get_param(const std::string& value, const ParameterItemTy
 
 void HttpServer::begin_simulate() {
   run_thread = std::thread([&](){
-    GameEnv env(config);
-    CoreRun core(config, env);
+    if (env != nullptr) {
+      delete env;
+    }
+    env = new GameEnv(config);
+    CoreRun core(config, *env);
     core.run(); 
   });
 }

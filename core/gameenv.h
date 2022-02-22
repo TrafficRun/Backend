@@ -4,6 +4,7 @@
 #include <vector>
 #include "commconfig.h"
 #include "parameter_type.h"
+#include <mutex>
 
 class GameEnvConfig {
 public:
@@ -13,6 +14,7 @@ public:
 
   std::optional<int> time_step;
   std::optional<int> agent_number;
+  std::optional<int> position_num;
 };
 
 extern int register_game_env_config();
@@ -100,14 +102,41 @@ public:
   GameExtType *ext_slot = nullptr;
 };
 
+struct GameSnapshotPath {
+  int agent_id;
+  std::vector<int> path;
+  int period;
+};
+
+struct GameSnapshotResultType {
+  int time_step;
+  std::vector<GameSnapshotPath> agents;
+  std::vector<int> rewards;
+};
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameSnapshotResultType &c);
+
+// 游戏快照
+class GameSnapshot {
+public:
+  GameSnapshot(GameEnvConfig& config);
+  int commit(const std::vector<GameAgentPtr>& agents, const std::vector<GameReward>& rewards);
+  std::optional<GameSnapshotResultType> get(int time_step);
+private:
+  std::mutex lock_mutex;
+  std::vector<int> agents_position_snapshot;
+
+  std::vector<std::vector<int>> rewards_position;
+  std::vector<std::vector<GameSnapshotPath>> agent_path;
+  GameEnvConfig& config;
+};
+
 class GameEnv {
 public:
   GameEnv(GameConfig& config);
-  ~GameEnv() {
-    for (auto item : graph) {
-      delete item;
-    }
-  }
+  ~GameEnv();
+  int commit();
+
   std::vector<GameStatePtr> graph;
   std::vector<std::vector<GameStatePtr>> position_graph;
   std::vector<std::vector<GameStatePtr>> time_step_graph;
@@ -117,7 +146,9 @@ public:
   int position_num;
   int time_step;
   int agent_number;
+
   GameEnvConfig config;
+  GameSnapshot *snapshot;
 private:
   int read_from_grid();
 };

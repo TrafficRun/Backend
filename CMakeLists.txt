@@ -8,12 +8,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(Boost REQUIRED program_options system chrono atomic timer json)
 find_package(Threads REQUIRED)
 
+add_subdirectory(./cpp-httplib/)
+
 # 普通文件
 aux_source_directory(. SOURCE_FILES)
 file(GLOB HEADER_FILES ./*.h)
 
 include_directories(./)
-include_directories(./core/)
 
 # 核心文件
 aux_source_directory(./core/ CORE_SOURCE_FILES)

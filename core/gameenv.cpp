@@ -2,6 +2,10 @@
 #include "commconfig.h"
 
 #include <vector>
+#include <mutex>
+#include <algorithm>
+#include <numeric>
+
 #include "globalvar.h"
 
 extern int register_game_env_config() {
@@ -27,6 +31,18 @@ GameEnvConfig::GameEnvConfig(GameConfig& config) {
   agent_number = boost::any_cast<int>(config.ext_config["env"]["agent_number"]);
 }
 
+GameEnv::~GameEnv() {
+  for (auto item : graph) {
+    delete item;
+  }
+
+  for (auto item : agents) {
+    delete item;
+  }
+
+  delete snapshot;
+}
+
 GameEnv::GameEnv(GameConfig& _config):
   config(_config)
 {
@@ -35,11 +51,19 @@ GameEnv::GameEnv(GameConfig& _config):
   if (config.graph_type.value() == "grid") {
     read_from_grid();
   }
+
   for (int loop_i = 0; loop_i < agent_number; ++loop_i) {
      GameAgentPtr magent = new GameAgent;
      magent->state = graph[0];
      agents.push_back(magent);
   }
+
+  snapshot = new GameSnapshot(config);
+}
+
+int GameEnv::commit() {
+  snapshot->commit(agents, rewards);
+  return 0;
 }
 
 int GameEnv::read_from_grid() {
@@ -56,6 +80,7 @@ int GameEnv::read_from_grid() {
 
   int action_num = ext_action_num + 4;
   position_num = width * height;
+  config.position_num = position_num;
 
   double *action_reward = new double[time_step * width * height * action_num]();
   double *action_transition_pro = new double[time_step * width * height * action_num * transition_pro_num];
@@ -178,4 +203,76 @@ int GameEnv::read_from_grid() {
 
   
   return 0;
+}
+
+GameSnapshot::GameSnapshot(GameEnvConfig& config) :
+  config(config)
+{
+  agents_position_snapshot = std::vector<int>(config.agent_number.value(), -1);  
+}
+
+int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vector<GameReward> &rewards) {
+  std::lock_guard<std::mutex> lock(lock_mutex);
+  std::vector<int> new_agent_position;
+
+  std::transform(agents.begin(), agents.end(), new_agent_position.end(), [](const GameAgentPtr& agent_item){
+    return agent_item->state->state_id;
+  });
+
+  std::vector<GameSnapshotPath> agent_path;
+
+  for (int loop_i = 0; loop_i < config.agent_number; ++loop_i) {
+    if (new_agent_position[loop_i] != agents_position_snapshot[loop_i]) {
+      if (agents_position_snapshot[loop_i] == -1) {
+        agent_path.push_back({
+          loop_i,
+          {new_agent_position[loop_i] - 1, new_agent_position[loop_i] - 1},
+          1
+        });
+      } else {
+        agent_path.push_back({
+          loop_i,
+          {(agents_position_snapshot[loop_i] - 1) % config.position_num.value(), (new_agent_position[loop_i] - 1) % config.position_num.value()},
+          ((new_agent_position[loop_i] - 1) / config.position_num.value() - (agents_position_snapshot[loop_i] - 1) / config.position_num.value())
+        });
+      }
+    }
+  }
+  agents_position_snapshot = new_agent_position;
+
+  std::vector<int> new_rewards_position;
+  std::transform(rewards.begin(), rewards.end(), new_rewards_position.end(), [](const GameReward& item) {
+    return item.state->position_id;
+  });
+
+  rewards_position.push_back(new_rewards_position);
+  return 0;
+}
+
+std::optional<GameSnapshotResultType> GameSnapshot::get(int time_step) {
+  if (rewards_position.size() <= time_step) {
+    return {};
+  }
+  GameSnapshotResultType result;
+  result.time_step = time_step;
+  result.agents = agent_path[time_step];
+  result.rewards = rewards_position[time_step];
+  return result;
+}
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameSnapshotResultType &c) {
+  boost::json::array agent;
+  for (int loop_i = 0; loop_i < c.agents.size(); ++loop_i) {
+    agent.push_back({
+      {"id", c.agents[loop_i].agent_id},
+      {"path", c.agents[loop_i].path},
+      {"period", c.agents[loop_i].period}
+    });
+  }
+
+  jv = boost::json::value({
+    {"time_step", c.time_step},
+    {"agents", agent},
+    {"rewards", c.rewards}
+  });
 }
