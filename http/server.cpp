@@ -28,6 +28,10 @@ int HttpServer::run() {
   serv.set_logger(std::bind(&HttpServer::logger, this, pl::_1, pl::_2));
   serv.Get("/comm_config", std::bind(&HttpServer::http_get_common_config, this, pl::_1, pl::_2));
   serv.Get("/model_config", std::bind(&HttpServer::http_get_model_config, this, pl::_1, pl::_2));
+  serv.Get("/generator_config", std::bind(&HttpServer::http_get_generator_config, this, pl::_1, pl::_2));
+  serv.Post("/begin_simulate", static_cast<std::function<void(const req_type&, rsp_type&)>>(std::bind(&HttpServer::http_post_begin_simulate, this, pl::_1, pl::_2)));
+  serv.Get("/simulate_result", std::bind(&HttpServer::http_get_simulate_result, this, pl::_1, pl::_2));
+  
   serv.set_default_headers({
     {"Access-Control-Allow-Origin", "*"}
   });
