@@ -9,6 +9,7 @@
 
 class SimpleRandomModel : public ModelBaseType {
 public:
+  const static std::string model_name;
   SimpleRandomModel(GameConfig& config, GameEnv& env);
   ~SimpleRandomModel(){};
   int run(int now_time);

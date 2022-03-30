@@ -13,6 +13,8 @@ public:
   RandomGenerator(GameConfig& config, GameEnv& env);
   ~RandomGenerator(){};
   int generate(int now_time);
+
+  static const std::string generator_name;
 private:
   GameConfig& config;
   GameEnv& env;

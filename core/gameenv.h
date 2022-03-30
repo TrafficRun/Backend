@@ -5,6 +5,7 @@
 #include "commconfig.h"
 #include "parameter_type.h"
 #include <mutex>
+#include <variant>
 
 class GameEnvConfig {
 public:
@@ -74,6 +75,7 @@ public:
   };
   int state_id;
   int position_id;
+  int period;
   std::vector<GameActionPtr> actions;
   GameExtType *ext_slot = nullptr;
 };
@@ -131,11 +133,36 @@ private:
   GameEnvConfig& config;
 };
 
+
+struct GameGraphGridDetail {
+public:
+  const static std::string graph_type;
+  // 高度方向区域的数量
+  int height;
+  // 宽度方向区域的数量
+  int width;
+};
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameGraphGridDetail const &c);
+
+struct GameEnvDetail {
+public:
+  // 图类型
+  std::string graph_type;
+  // 时间长度
+  int time_step;
+  // 图详细信息
+  std::variant<GameGraphGridDetail> graph;
+};
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameEnvDetail const &c);
+
 class GameEnv {
 public:
   GameEnv(GameConfig& config);
   ~GameEnv();
   int commit();
+  GameEnvDetail detail();
 
   std::vector<GameStatePtr> graph;
   std::vector<std::vector<GameStatePtr>> position_graph;
@@ -146,11 +173,14 @@ public:
   int position_num;
   int time_step;
   int agent_number;
-
+  
   GameEnvConfig config;
   GameSnapshot *snapshot;
 private:
   int read_from_grid();
+  GameEnvDetail m_detail;
 };
+
+
 
 #endif

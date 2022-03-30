@@ -8,6 +8,8 @@
 
 #include "globalvar.h"
 
+const std::string GameGraphGridDetail::graph_type = "grid";
+
 extern int register_game_env_config() {
   std::vector<std::string> graph_type_list = {"grid"};
   ParameterBaseTypeEnumExtType graph_type_ext;
@@ -72,15 +74,22 @@ int GameEnv::read_from_grid() {
     exit(-1);
   }
 
+  GameGraphGridDetail m_graph_detail;
+  m_detail.graph_type = GameGraphGridDetail::graph_type;
+
   int width = 0;
   int height = 0;
   int ext_action_num = 0;
   int transition_pro_num = 0;
   fscanf(graph_fp, "%d,%d,%d,%d,%d", &time_step, &width, &height, &ext_action_num, &transition_pro_num);
 
+  m_graph_detail.height = height;
+  m_graph_detail.width = width;
+  m_detail.time_step = time_step;
   int action_num = ext_action_num + 4;
   position_num = width * height;
   config.position_num = position_num;
+  m_detail.time_step = time_step;
 
   double *action_reward = new double[time_step * width * height * action_num]();
   double *action_transition_pro = new double[time_step * width * height * action_num * transition_pro_num];
@@ -108,6 +117,7 @@ int GameEnv::read_from_grid() {
   auto begin_state = new GameState();
   begin_state->state_id = 0;
   begin_state->position_id = -1;
+  begin_state->period = -1;
   graph.push_back(begin_state);
 
   for (int loop_i = 0; loop_i < time_step; ++loop_i) {
@@ -116,6 +126,8 @@ int GameEnv::read_from_grid() {
         auto new_state = new GameState();
         new_state->state_id = static_cast<int>(graph.size());
         new_state->position_id = 1 + loop_h * width + loop_w;
+        new_state->period = loop_i;
+
         graph.push_back(new_state);
         time_step_graph[loop_i].push_back(new_state);
         position_graph[loop_h * width + loop_w].push_back(new_state);
@@ -126,6 +138,7 @@ int GameEnv::read_from_grid() {
   auto end_state = new GameState();
   end_state->state_id = static_cast<int>(graph.size());
   end_state->position_id = -1;
+  end_state->period = std::numeric_limits<int>::max();
   graph.push_back(end_state);
 
   // 初始化动作和转移
@@ -201,7 +214,7 @@ int GameEnv::read_from_grid() {
     }
   }
 
-  
+  m_detail.graph = m_graph_detail;
   return 0;
 }
 
@@ -262,6 +275,11 @@ std::optional<GameSnapshotResultType> GameSnapshot::get(int time_step) {
   return result;
 }
 
+
+GameEnvDetail GameEnv::detail() {
+  return m_detail;
+}
+
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameSnapshotResultType &c) {
   boost::json::array agent;
   for (int loop_i = 0; loop_i < c.agents.size(); ++loop_i) {
@@ -276,5 +294,22 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
     {"time_step", c.time_step},
     {"agents", agent},
     {"rewards", c.rewards}
+  });
+}
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameGraphGridDetail const &c) {
+  jv = boost::json::value({
+    {"graph_type", c.graph_type},
+    {"height", c.height},
+    {"width", c.width}
+  });
+}
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameEnvDetail const &c) {
+  boost::json::value graph = boost::json::value_from(std::get<GameGraphGridDetail>(c.graph));
+  jv = boost::json::value({
+    {"time_step", c.time_step},
+    {"graph_type", c.graph_type},
+    {"graph", graph}
   });
 }

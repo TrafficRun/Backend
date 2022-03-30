@@ -129,9 +129,7 @@ void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
   env = new GameEnv(config);
 
   begin_simulate();
-  rsp.set_content(result_from(0, boost::json::value({
-    {"timestep", env->time_step} 
-  })), http_json_mine_type);
+  rsp.set_content(result_from(0, boost::json::value_from(env->detail())), http_json_mine_type);
 }
 
 void HttpServer::logger(const req_type&req, const rsp_type& rsp) {

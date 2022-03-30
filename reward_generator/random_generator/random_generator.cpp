@@ -3,7 +3,7 @@
 #include "core/parameter_type.h"
 #include "core/globalvar.h"
 
-static const std::string generator_name = "random_generator";
+const std::string RandomGenerator::generator_name = "random_generator";
 
 RandomGenerator::RandomGenerator(GameConfig& config, GameEnv& env) :
   config(config),
@@ -31,7 +31,7 @@ GeneratorBaseType *generate_random_generator(GameConfig& config, GameEnv& env) {
 
 extern int register_random_generator() {
   GeneratorType generator_info;
-  generator_info.generator_name = generator_name;
+  generator_info.generator_name = RandomGenerator::generator_name;
   generator_info.generate_func = generate_random_generator;
   generator_info.parameters = {
     {"reward_number", "reward number", ParameterBaseType_INT, 10, {}}
