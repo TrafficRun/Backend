@@ -28,7 +28,8 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Para
   
   switch (c.type) {
     case ParameterBaseType_BOOL:
-      default_value = false;
+      if (c.default_value.empty()) default_value = false;
+      else default_value = boost::any_cast<bool>(c.default_value);
     break;
     case ParameterBaseType_ENUM:
       default_value = boost::any_cast<int>(c.default_value);

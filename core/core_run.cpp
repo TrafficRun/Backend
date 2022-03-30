@@ -34,6 +34,7 @@ int CoreRun::run() {
   for (int loop_time = 0; loop_time < env.time_step; ++loop_time) {
     generator_obj->generate(loop_time);
     model_obj->run(loop_time);
+    env.commit();
   }
 
   delete model_obj;

@@ -12,7 +12,7 @@ SimpleRandomModel::SimpleRandomModel(GameConfig& config, GameEnv& env) :
 int SimpleRandomModel::run(int now_time) {
   for (int loop_i = 0; loop_i < env.agent_number; ++loop_i) {
     auto magent = env.agents[loop_i];
-    if ((magent->state->position_id - 1)/env.position_num != now_time) continue;
+    if ((magent->state->position_id - 1) / env.position_num > now_time) continue;
     auto mstate = magent->state;
     int chosen_action_index = static_cast<int>(random_gen() % (mstate->actions.size()));
     auto maction = mstate->actions[chosen_action_index];

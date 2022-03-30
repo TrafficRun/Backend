@@ -115,7 +115,7 @@ int GameEnv::read_from_grid() {
       for (int loop_w = 0; loop_w < width; ++loop_w) {
         auto new_state = new GameState();
         new_state->state_id = static_cast<int>(graph.size());
-        new_state->position_id = 1 + loop_i * width * height + loop_h * width + loop_w;
+        new_state->position_id = 1 + loop_h * width + loop_w;
         graph.push_back(new_state);
         time_step_graph[loop_i].push_back(new_state);
         position_graph[loop_h * width + loop_w].push_back(new_state);
@@ -213,24 +213,24 @@ GameSnapshot::GameSnapshot(GameEnvConfig& config) :
 
 int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vector<GameReward> &rewards) {
   std::lock_guard<std::mutex> lock(lock_mutex);
-  std::vector<int> new_agent_position;
+  std::vector<int> new_agent_position(agents.size(), 0);
 
-  std::transform(agents.begin(), agents.end(), new_agent_position.end(), [](const GameAgentPtr& agent_item){
-    return agent_item->state->state_id;
+  std::transform(agents.begin(), agents.end(), new_agent_position.begin(), [](const GameAgentPtr& agent_item){
+    return agent_item->state->position_id;
   });
 
-  std::vector<GameSnapshotPath> agent_path;
+  std::vector<GameSnapshotPath> new_agent_path;
 
   for (int loop_i = 0; loop_i < config.agent_number; ++loop_i) {
     if (new_agent_position[loop_i] != agents_position_snapshot[loop_i]) {
       if (agents_position_snapshot[loop_i] == -1) {
-        agent_path.push_back({
+        new_agent_path.push_back({
           loop_i,
           {new_agent_position[loop_i] - 1, new_agent_position[loop_i] - 1},
           1
         });
       } else {
-        agent_path.push_back({
+        new_agent_path.push_back({
           loop_i,
           {(agents_position_snapshot[loop_i] - 1) % config.position_num.value(), (new_agent_position[loop_i] - 1) % config.position_num.value()},
           ((new_agent_position[loop_i] - 1) / config.position_num.value() - (agents_position_snapshot[loop_i] - 1) / config.position_num.value())
@@ -240,8 +240,10 @@ int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vec
   }
   agents_position_snapshot = new_agent_position;
 
-  std::vector<int> new_rewards_position;
-  std::transform(rewards.begin(), rewards.end(), new_rewards_position.end(), [](const GameReward& item) {
+  this->agent_path.push_back(new_agent_path);
+
+  std::vector<int> new_rewards_position(rewards.size(), 0);
+  std::transform(rewards.begin(), rewards.end(), new_rewards_position.begin(), [](const GameReward& item) {
     return item.state->position_id;
   });
 
@@ -250,8 +252,8 @@ int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vec
 }
 
 std::optional<GameSnapshotResultType> GameSnapshot::get(int time_step) {
-  if (rewards_position.size() <= time_step) {
-    return {};
+  if (rewards_position.size() <= time_step || agent_path.size() <= time_step) {
+    return std::nullopt;
   }
   GameSnapshotResultType result;
   result.time_step = time_step;

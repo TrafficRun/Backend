@@ -21,7 +21,9 @@ namespace hl = httplib;
 namespace pl = std::placeholders;
 
 const static char* http_json_mine_type = "application/json";
-HttpServer::HttpServer(GameConfig& config) : config(config) {}
+HttpServer::HttpServer(GameConfig& config) : config(config) {
+  this->env = nullptr;
+}
 
 int HttpServer::run() {
   hl::Server serv;
@@ -33,14 +35,14 @@ int HttpServer::run() {
   serv.Get("/simulate_result", std::bind(&HttpServer::http_get_simulate_result, this, pl::_1, pl::_2));
   
   serv.set_default_headers({
-    {"Access-Control-Allow-Origin", "*"}
+    {"Access-Control-Allow-Origin", "*"},
+    {"Access-Control-Allow-Methods", "POST,GET,OPTIONS,DELETE"}
   });
   serv.listen(config.server->c_str(), config.port.value());
   return 0;  
 }
 
 void HttpServer::http_get_common_config(const req_type& req, rsp_type& rsp) {
-  std::cout << "Test" << std::endl;
   std::vector<ParameterItemType> temp_global_parameters = global_var.global_parameters;
 
   std::map<std::string, int> temp_global_parameters_map;
@@ -88,7 +90,8 @@ void HttpServer::http_get_generator_config(const req_type& req, rsp_type& rsp) {
 void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
   auto model_name = req.get_param_value("model_name");
   auto generator_name = req.get_param_value("generator_name");
-  
+
+  // set global config
   config.model_name = model_name;
   config.generator_name = generator_name;
   
@@ -120,8 +123,15 @@ void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
   }
   config.ext_config["env"] = env_set_config;
 
+  if (env != nullptr) {
+    delete env;
+  }
+  env = new GameEnv(config);
+
   begin_simulate();
-  rsp.set_content(result_from(0, nullptr), http_json_mine_type);
+  rsp.set_content(result_from(0, boost::json::value({
+    {"timestep", env->time_step} 
+  })), http_json_mine_type);
 }
 
 void HttpServer::logger(const req_type&req, const rsp_type& rsp) {
@@ -138,12 +148,14 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
 
 void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
   int time_step = std::atoi(req.get_param_value("time_step").c_str());
-  auto result_data = env->snapshot->get(time_step);
-  if (result_data.has_value()) {
-    rsp.set_content(result_from(0, bj::value_from(result_data.value())), http_json_mine_type);
-  } else {
-    rsp.set_content(result_from(-1, bj::value(nullptr)), http_json_mine_type);
+  if (env != nullptr) {
+    auto result_data = env->snapshot->get(time_step);
+    if (result_data.has_value()) {
+      rsp.set_content(result_from(0, bj::value_from(result_data.value())), http_json_mine_type);
+      return;
+    }
   }
+  rsp.set_content(result_from(-1, bj::value(nullptr)), http_json_mine_type);
 }
 
 HttpServer::~HttpServer() {
@@ -187,11 +199,7 @@ boost::any HttpServer::get_param(const std::string& value, const ParameterItemTy
 
 void HttpServer::begin_simulate() {
   run_thread = std::thread([&](){
-    if (env != nullptr) {
-      delete env;
-    }
-    env = new GameEnv(config);
     CoreRun core(config, *env);
-    core.run(); 
+    core.run();
   });
 }

@@ -12,7 +12,7 @@ class RandomGenerator : public GeneratorBaseType {
 public:
   RandomGenerator(GameConfig& config, GameEnv& env);
   ~RandomGenerator(){};
-  int run(int now_time);
+  int generate(int now_time);
 private:
   GameConfig& config;
   GameEnv& env;

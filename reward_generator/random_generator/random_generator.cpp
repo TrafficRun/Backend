@@ -9,10 +9,12 @@ RandomGenerator::RandomGenerator(GameConfig& config, GameEnv& env) :
   config(config),
   env(env)
 {
-  
+  reward_number = boost::any_cast<int>(config.ext_config[generator_name]["reward_number"]);
 }
 
-int RandomGenerator::run(int now_time) {
+#include <iostream>
+
+int RandomGenerator::generate(int now_time) {
   env.rewards.clear();
   for (int loop_i = 0; loop_i < reward_number; ++loop_i) {
     GameReward reward_item;
