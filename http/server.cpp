@@ -15,15 +15,16 @@
 
 #include <boost/json.hpp>
 #include <boost/any.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 namespace bj = boost::json;
 namespace hl = httplib;
 namespace pl = std::placeholders;
 
 const static char* http_json_mine_type = "application/json";
-HttpServer::HttpServer(GameConfig& config) : config(config) {
-  this->env = nullptr;
-}
+HttpServer::HttpServer(GameConfig& config) : config(config) {}
 
 int HttpServer::run() {
   hl::Server serv;
@@ -131,6 +132,7 @@ void HttpServer::http_get_generator_config(const req_type& req, rsp_type& rsp) {
  * 输入：{[key : str] : str | int | float}
  * 返回：{
  *   "time_step" : int,
+ *   "token": str,
  *   "agent_number" : int,
  *   "graph_type" : str,
  *   "graph": {
@@ -142,10 +144,11 @@ void HttpServer::http_get_generator_config(const req_type& req, rsp_type& rsp) {
 void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
   auto model_name = req.get_param_value("model_name");
   auto generator_name = req.get_param_value("generator_name");
+  GameConfig fconfig = config;
 
   // set global config
-  config.model_name = model_name;
-  config.generator_name = generator_name;
+  fconfig.model_name = model_name;
+  fconfig.generator_name = generator_name;
   
   auto model_config = global_var.get_model_config(model_name);
   auto generator_config = global_var.get_generator_config(generator_name);
@@ -156,7 +159,7 @@ void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
     const auto& param_item = model_config.parameters[loop_i];
     model_set_config[param_item.name] = get_param(req.get_param_value(param_item.name.c_str()), param_item);
   }
-  config.ext_config[model_name] = model_set_config;
+  fconfig.ext_config[model_name] = model_set_config;
 
   // set generator config
   std::map<std::string, boost::any> generator_set_config;
@@ -164,7 +167,7 @@ void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
     const auto& param_item = generator_config.parameters[loop_i];
     generator_set_config[param_item.name] = get_param(req.get_param_value(param_item.name.c_str()), param_item);
   }
-  config.ext_config[generator_name] = generator_set_config;
+  fconfig.ext_config[generator_name] = generator_set_config;
 
   // set env config
   std::map<std::string, boost::any> env_set_config;
@@ -173,15 +176,16 @@ void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
     const auto param_item = env_config[loop_i];
     env_set_config[param_item.name] = get_param(req.get_param_value(param_item.name.c_str()), param_item);
   }
-  config.ext_config["env"] = env_set_config;
+  fconfig.ext_config["env"] = env_set_config;
 
-  if (env != nullptr) {
-    delete env;
-  }
-  env = new GameEnv(config);
+  std::string token = boost::uuids::to_string(boost::uuids::random_generator()());
+  auto run_handle = std::make_shared<GameRunHandle>(fconfig);
+  run_handles[token] = run_handle;
 
-  begin_simulate();
-  rsp.set_content(result_from(0, boost::json::value_from(env->detail())), http_json_mine_type);
+  auto returnJsonObj = boost::json::value_from(run_handle->get_env_detail()).as_object();
+  returnJsonObj["token"] = token;
+
+  rsp.set_content(result_from(0, returnJsonObj), http_json_mine_type);
 }
 
 void HttpServer::logger(const req_type&req, const rsp_type& rsp) {
@@ -198,7 +202,8 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
 
 /* 获取模拟结果
  * 输入 {
- *  "time_step": int
+ *  "time_step": int,
+ *  "token": str
  * }
  * 输出 {
  *   "time_step": int,
@@ -212,8 +217,10 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
  */
 void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
   int time_step = std::atoi(req.get_param_value("time_step").c_str());
-  if (env != nullptr) {
-    auto result_data = env->snapshot->get(time_step);
+  std::string run_token = req.get_param_value("token");
+  if (run_handles.find(run_token) != run_handles.end()) {
+    const auto& run_handle = run_handles[run_token];
+    auto result_data = run_handle->get_snapshot(time_step);
     if (result_data.has_value()) {
       rsp.set_content(result_from(0, bj::value_from(result_data.value())), http_json_mine_type);
       return;
@@ -222,9 +229,7 @@ void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
   rsp.set_content(result_from(-1, bj::value(nullptr)), http_json_mine_type);
 }
 
-HttpServer::~HttpServer() {
-  delete env;
-}
+HttpServer::~HttpServer() {}
 
 boost::any HttpServer::get_param(const std::string& value, const ParameterItemType& item) {
   boost::any result;
@@ -261,9 +266,24 @@ boost::any HttpServer::get_param(const std::string& value, const ParameterItemTy
   return result;
 }
 
-void HttpServer::begin_simulate() {
-  run_thread = std::thread([&](){
-    CoreRun core(config, *env);
+GameRunHandle::GameRunHandle(const GameConfig &config) {
+  m_config = std::make_shared<GameConfig>(config);
+  m_env = std::make_shared<GameEnv>(config);
+  m_run_handle = std::thread([&](){
+    CoreRun core(*m_config, *m_env);
     core.run();
+    m_is_finish = true;
   });
+}
+
+GameEnvDetail GameRunHandle::get_env_detail() {
+  return m_env->detail();
+}
+
+bool GameRunHandle::is_finish() {
+  return m_is_finish;
+}
+
+std::optional<GameSnapshotResultType> GameRunHandle::get_snapshot(int time_step) {
+  return m_env->snapshot->get(time_step);
 }
