@@ -50,6 +50,7 @@ GameEnv::GameEnv(GameConfig& _config):
 {
   time_step = config.time_step.value();
   agent_number = config.agent_number.value();
+  m_detail.agent_number = agent_number;
   if (config.graph_type.value() == "grid") {
     read_from_grid();
   }
@@ -310,6 +311,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Game
   jv = boost::json::value({
     {"time_step", c.time_step},
     {"graph_type", c.graph_type},
-    {"graph", graph}
+    {"graph", graph},
+    {"agent_number", c.agent_number}
   });
 }

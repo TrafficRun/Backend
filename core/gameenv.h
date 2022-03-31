@@ -151,6 +151,8 @@ public:
   std::string graph_type;
   // 时间长度
   int time_step;
+  // 智能体数量
+  int agent_number;
   // 图详细信息
   std::variant<GameGraphGridDetail> graph;
 };
