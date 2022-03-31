@@ -28,10 +28,15 @@ HttpServer::HttpServer(GameConfig& config) : config(config) {
 int HttpServer::run() {
   hl::Server serv;
   serv.set_logger(std::bind(&HttpServer::logger, this, pl::_1, pl::_2));
+  // 返回公共信息
   serv.Get("/comm_config", std::bind(&HttpServer::http_get_common_config, this, pl::_1, pl::_2));
+  // 返回模型配置
   serv.Get("/model_config", std::bind(&HttpServer::http_get_model_config, this, pl::_1, pl::_2));
+  // 返回生成器信息
   serv.Get("/generator_config", std::bind(&HttpServer::http_get_generator_config, this, pl::_1, pl::_2));
+  // 开始模拟
   serv.Post("/begin_simulate", static_cast<std::function<void(const req_type&, rsp_type&)>>(std::bind(&HttpServer::http_post_begin_simulate, this, pl::_1, pl::_2)));
+  // 返回模拟结果
   serv.Get("/simulate_result", std::bind(&HttpServer::http_get_simulate_result, this, pl::_1, pl::_2));
   
   serv.set_default_headers({
@@ -42,6 +47,25 @@ int HttpServer::run() {
   return 0;  
 }
 
+/* 返回公共信息
+ * 输入：空
+ * 返回：{
+ *   global: [
+ *     {
+ *       "name": str,
+ *       "description": str,
+ *       "type": str,
+ *       "default_value": str | int | float,
+ *       "ext_slot": null | [str] | {
+ *         min: int,
+ *         max: int,
+ *         is_continue: int
+ *       }
+ *     }, ....
+ *   ],
+ *   env: same above
+ * }
+ */
 void HttpServer::http_get_common_config(const req_type& req, rsp_type& rsp) {
   std::vector<ParameterItemType> temp_global_parameters = global_var.global_parameters;
 
@@ -61,6 +85,14 @@ void HttpServer::http_get_common_config(const req_type& req, rsp_type& rsp) {
   rsp.set_content(result_from(0, result), http_json_mine_type);
 }
 
+/* 获取模型配置
+ * 输入：{
+ *   "model_name": str 
+ * }
+ * 输出：[
+ *   same above, ...
+ * ]
+ */ 
 void HttpServer::http_get_model_config(const req_type& req, rsp_type& rsp) {
   std::string model_name = req.get_param_value("model_name");
   auto model_config_iter = std::find_if(global_var.models.begin(), global_var.models.end(), [&](const ModelType& item){
@@ -73,6 +105,14 @@ void HttpServer::http_get_model_config(const req_type& req, rsp_type& rsp) {
   rsp.set_content(result_from(0, bj::value_from(model_config_iter->parameters)), http_json_mine_type);
 }
 
+/* 获取模型配置
+ * 输入：{
+ *   "generator_name": str 
+ * }
+ * 输出：[
+ *   same above, ...
+ * ]
+ */ 
 void HttpServer::http_get_generator_config(const req_type& req, rsp_type& rsp) {
   std::string generator_name = req.get_param_value("generator_name");
   auto generator_config_iter = std::find_if(global_var.generators.begin(), global_var.generators.end(), [&](const GeneratorType& item) {
@@ -87,6 +127,18 @@ void HttpServer::http_get_generator_config(const req_type& req, rsp_type& rsp) {
   rsp.set_content(result_from(0, bj::value_from(generator_config_iter->parameters)), http_json_mine_type);
 }
 
+/* 开始模拟
+ * 输入：{[key : str] : str | int | float}
+ * 返回：{
+ *   "time_step" : int,
+ *   "agent_number" : int,
+ *   "graph_type" : str,
+ *   "graph": {
+ *     "height": int,
+ *     "width": int
+ *   } | null
+ * }
+ */
 void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
   auto model_name = req.get_param_value("model_name");
   auto generator_name = req.get_param_value("generator_name");
@@ -144,6 +196,20 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
   }));
 }
 
+/* 获取模拟结果
+ * 输入 {
+ *  "time_step": int
+ * }
+ * 输出 {
+ *   "time_step": int,
+ *   "agents": [{
+ *     "agent_id": int,
+ *     "path": [int, ...],
+ *     "period": int
+ *   }],
+ *   "rewards": [int, ...]
+ * }
+ */
 void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
   int time_step = std::atoi(req.get_param_value("time_step").c_str());
   if (env != nullptr) {
