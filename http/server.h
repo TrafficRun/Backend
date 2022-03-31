@@ -13,7 +13,7 @@
 
 class GameRunHandle {
 public:
-  GameRunHandle(const GameConfig &config);
+  GameRunHandle(GameConfig &config);
   GameEnvDetail get_env_detail();
   std::optional<GameSnapshotResultType> get_snapshot(int time_step);
   bool is_finish();
@@ -37,6 +37,7 @@ private:
   void http_get_generator_config(const req_type& req, rsp_type& rsp);
   void http_post_begin_simulate(const req_type& req, rsp_type& rsp);
   void http_get_simulate_result(const req_type& req, rsp_type& rsp);
+  void http_get_version(const req_type& req, rsp_type& rsp);
 
   void logger(const req_type&req, const rsp_type& rsp);
   boost::any get_param(const std::string& value, const ParameterItemType& item);

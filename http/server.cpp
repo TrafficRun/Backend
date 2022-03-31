@@ -3,6 +3,7 @@
 #include "core/gameenv.h"
 #include "core/commconfig.h"
 #include "core/core_run.h"
+#include "core/version.h"
 
 #include "cpp-httplib/httplib.h"
 
@@ -39,13 +40,23 @@ int HttpServer::run() {
   serv.Post("/begin_simulate", static_cast<std::function<void(const req_type&, rsp_type&)>>(std::bind(&HttpServer::http_post_begin_simulate, this, pl::_1, pl::_2)));
   // 返回模拟结果
   serv.Get("/simulate_result", std::bind(&HttpServer::http_get_simulate_result, this, pl::_1, pl::_2));
-  
+  // 获取版本信息
+  serv.Get("/version", std::bind(&HttpServer::http_get_version, this, pl::_1, pl::_2));
+
+  // 头  
   serv.set_default_headers({
     {"Access-Control-Allow-Origin", "*"},
     {"Access-Control-Allow-Methods", "POST,GET,OPTIONS,DELETE"}
   });
   serv.listen(config.server->c_str(), config.port.value());
   return 0;  
+}
+
+void HttpServer::http_get_version(const req_type& req, rsp_type& rsp) {
+  bj::value result = bj::value({
+    {"version", PROJECT_BUILD_INFO}
+  });
+  rsp.set_content(result_from(0, result), http_json_mine_type);
 }
 
 /* 返回公共信息
@@ -266,7 +277,7 @@ boost::any HttpServer::get_param(const std::string& value, const ParameterItemTy
   return result;
 }
 
-GameRunHandle::GameRunHandle(const GameConfig &config) {
+GameRunHandle::GameRunHandle(GameConfig &config) {
   m_config = std::make_shared<GameConfig>(config);
   m_env = std::make_shared<GameEnv>(config);
   m_run_handle = std::thread([&](){

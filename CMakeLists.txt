@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.22)
-project(TrafficRun LANGUAGES CXX)
+project(TrafficRun LANGUAGES CXX VERSION "0.1.0")
+
+execute_process(
+  COMMAND git rev-parse --short HEAD
+  WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+  OUTPUT_VARIABLE GIT_SHORT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+configure_file("core/version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @ONLY)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -49,6 +58,8 @@ foreach(MFILE ${REWARD_FILES})
     list(APPEND REWARD_GENS_HEADER ${MODEL_HEADER})
   endif()
 endforeach()
+
+list(APPEND SOURCE_FILES "${CMAKE_CURRENT_BINARY_DIR}/version.cpp")
 
 add_executable(${PROJECT_NAME} 
   ${SOURCE_FILES} 

@@ -1,0 +1,10 @@
+#include "core/version.h"
+
+const std::string PROJECT_NAME = "@PROJECT_NAME@";
+const std::string PROJECT_VER =  "@PROJECT_VERSION@";
+const std::string PROJECT_VER_MAJOR = "@PROJECT_VERSION_MAJOR@";
+const std::string PROJECT_VER_MINOR = "@PROJECT_VERSION_MINOR@";
+const std::string PTOJECT_VER_PATCH = "@PROJECT_VERSION_PATCH@";
+const std::string PROJECT_GIT_SHORT_HASH = "@GIT_SHORT_HASH@";
+const std::string PROJECT_BUILD_TYPE = "@CMAKE_BUILD_TYPE@";
+const std::string PROJECT_BUILD_INFO = (PROJECT_NAME + " ver" + PROJECT_VER + "-" + PROJECT_BUILD_TYPE + "_" + PROJECT_GIT_SHORT_HASH);

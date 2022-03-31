@@ -3,6 +3,7 @@
 #include "globalvar.h"
 #include "commconfig.h"
 #include "gameenv.h"
+#include "version.h"
 
 #include <boost/program_options.hpp>
 #include <boost/any.hpp>
@@ -14,7 +15,7 @@
 
 
 CMDLine::CMDLine() :
-  cmd_options("Traffic Run")
+  cmd_options(PROJECT_BUILD_INFO)
 {
   auto game_config = global_var.global_parameters;
   auto game_env_config = global_var.game_env_parameters;
@@ -24,7 +25,7 @@ CMDLine::CMDLine() :
     generate_parser(game_config_desc, item);
   }
 
-  game_config_desc.add_options()("h,help", "Get Help");
+  game_config_desc.add_options()("help,h", "Get Help");
   cmd_options.add(game_config_desc);
 
   boost::program_options::options_description game_env_config_desc("Game Env Config");

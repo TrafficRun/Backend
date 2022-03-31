@@ -12,6 +12,7 @@
 
 class GameConfig {
 public:
+  GameConfig() {};
   GameConfig(const GameConfig& pc) = default;
   std::optional<bool> online;
   std::optional<std::string> server;
