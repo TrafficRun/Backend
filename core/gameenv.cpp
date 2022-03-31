@@ -285,7 +285,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
   boost::json::array agent;
   for (int loop_i = 0; loop_i < c.agents.size(); ++loop_i) {
     agent.push_back({
-      {"id", c.agents[loop_i].agent_id},
+      {"agent_id", c.agents[loop_i].agent_id},
       {"path", c.agents[loop_i].path},
       {"period", c.agents[loop_i].period}
     });
@@ -300,7 +300,6 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
 
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameGraphGridDetail const &c) {
   jv = boost::json::value({
-    {"graph_type", c.graph_type},
     {"height", c.height},
     {"width", c.width}
   });
