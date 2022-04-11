@@ -230,7 +230,7 @@ int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vec
   std::vector<int> new_agent_position(agents.size(), 0);
 
   std::transform(agents.begin(), agents.end(), new_agent_position.begin(), [](const GameAgentPtr& agent_item){
-    return agent_item->state->position_id;
+    return agent_item->state->state_id;
   });
 
   std::vector<GameSnapshotPath> new_agent_path;
@@ -294,7 +294,8 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
   jv = boost::json::value({
     {"time_step", c.time_step},
     {"agents", agent},
-    {"rewards", c.rewards}
+    {"rewards", c.rewards},
+    {"gain", c.time_step}
   });
 }
 
