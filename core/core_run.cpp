@@ -33,7 +33,7 @@ int CoreRun::run() {
     std::exit(-1);
   }
   // 添加生成器的扩展
-  add_exts(model_config->model_name, model_config->ext_info);
+  add_exts(generator_config->generator_name, generator_config->ext_info);
   // 生成器对象
   GeneratorBaseType *generator_obj = generator_config->generate_func(config, env);
 

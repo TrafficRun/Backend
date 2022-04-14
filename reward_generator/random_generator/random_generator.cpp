@@ -34,7 +34,7 @@ extern int register_random_generator() {
   generator_info.parameters = {
     {"reward_number", "reward number", ParameterBaseType_INT, 10, {}}
   };
-  generator_info.ext_info[ext_slot_type_string[ExtSlotTypeAction]] = RandomGeneratorActionExtType::create_ext;
+  generator_info.ext_info[ext_slot_type_string[ExtSlotTypeAction]] = &RandomGeneratorActionExtType::create_ext;
   register_generator(generator_info);
   return 0;
 }
