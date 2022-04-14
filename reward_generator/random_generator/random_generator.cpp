@@ -17,6 +17,8 @@ int RandomGenerator::generate(int now_time) {
     GameRewardPtr reward_item = env.create_reward();
     int status_id = 1 + env.position_num * now_time + static_cast<int>((random_gen()%env.position_num));
     reward_item->state = env.graph[status_id];
+    const auto& maction = env.graph[status_id]->actions[random_gen()%(env.graph[status_id]->actions.size())];
+    RandomGeneratorActionExtType::get_ext(maction)->reward_number++;
   }
   return 0;
 }
@@ -32,6 +34,15 @@ extern int register_random_generator() {
   generator_info.parameters = {
     {"reward_number", "reward number", ParameterBaseType_INT, 10, {}}
   };
+  generator_info.ext_info[ext_slot_type_string[ExtSlotTypeAction]] = RandomGeneratorActionExtType::create_ext;
   register_generator(generator_info);
   return 0;
+}
+
+RandomGeneratorActionExtType* RandomGeneratorActionExtType::get_ext(GameActionPtr maction) {
+  return static_cast<RandomGeneratorActionExtType *>(maction->ext_slot[RandomGenerator::generator_name]);
+}
+
+GameExtType* RandomGeneratorActionExtType::create_ext(const void * maction) {
+  return new RandomGeneratorActionExtType;
 }
