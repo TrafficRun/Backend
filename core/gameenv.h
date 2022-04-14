@@ -6,7 +6,10 @@
 #include "parameter_type.h"
 #include <mutex>
 #include <variant>
+#include <map>
+#include <functional>
 
+// 环境配置对象
 class GameEnvConfig {
 public:
   GameEnvConfig(GameConfig& config);
@@ -18,31 +21,40 @@ public:
   std::optional<int> position_num;
 };
 
+// 注册环境配置
 extern int register_game_env_config();
 
 class GameState;
 typedef GameState* GameStatePtr;
 
+// 游戏状态智能体等对象的额外扩展插槽
 class GameExtType {
 public:
   virtual ~GameExtType(){};
 };
 
+typedef std::function<GameExtType*(const void * item)> generate_ext_func_type;
+
+// 转移对象
 class GameTransition {
 public:
   GameTransition(){};
   ~GameTransition() {
-    if (ext_slot != nullptr) {
-      delete ext_slot;
+    for (const auto &ext : ext_slot) {
+      delete ext.second;
     }
   };
+  // 转移到的位置
   GameStatePtr target;
+  // 当前转移的ID，在action上面的编号
   int transition_id;
-  GameExtType *ext_slot = nullptr;
+  std::map<std::string, GameExtType *> ext_slot;
 };
 
+// 转移的指针
 typedef GameTransition* GameTransitionPtr;
 
+// 动作对象
 class GameAction {
 public:
   GameAction(){};
@@ -51,17 +63,21 @@ public:
       delete item;
     }
 
-    if (ext_slot != nullptr) {
-      delete ext_slot;
+    for (const auto &ext : ext_slot) {
+      delete ext.second;
     }
   };
+  // 动作ID，动作在state下的编号
   int action_id;
+  // 转移集合
   std::vector<GameTransitionPtr> transitions;
-  GameExtType *ext_slot = nullptr;
+  std::map<std::string, GameExtType *> ext_slot;
 };
 
+// 动作的指针
 typedef GameAction* GameActionPtr;
 
+// 状态对象
 class GameState {
 public:
   GameState(){};
@@ -69,51 +85,73 @@ public:
     for (auto item : actions) {
       delete item;
     }
-    if (ext_slot != nullptr) {
-      delete ext_slot;
+    for (const auto &ext : ext_slot) {
+      delete ext.second;
     }
   };
+  // 状态ID，唯一
   int state_id;
+  // 位置ID，不唯一，不同时间下可能出现同一位置的不同状态
   int position_id;
+  // 当前所处的时间片
   int period;
+  // 当前状态下的动作集合
   std::vector<GameActionPtr> actions;
-  GameExtType *ext_slot = nullptr;
+  std::map<std::string, GameExtType *> ext_slot;
 };
 
+// 智能体对象
 class GameAgent {
 public:
   GameAgent() {};
   ~GameAgent() {
-    if (ext_slot != nullptr) delete ext_slot;
+    for (const auto &ext : ext_slot) {
+      delete ext.second;
+    }
   };
+  // 智能体所处的状态
   GameStatePtr state;
-  GameExtType *ext_slot = nullptr;
+  std::map<std::string, GameExtType *> ext_slot;
 };
 
 typedef GameAgent* GameAgentPtr;
 
+// 收益对象
 class GameReward {
 public:
   GameReward() {};
   ~GameReward() {
-    if (ext_slot != nullptr) {
-      delete ext_slot;
+    for (const auto &ext : ext_slot) {
+      delete ext.second;
     }
   };
+  // 收益所处的状态
   GameStatePtr state;
-  GameExtType *ext_slot = nullptr;
+  std::map<std::string, GameExtType *> ext_slot;
 };
 
+typedef std::shared_ptr<GameReward> GameRewardPtr;
+
+// 快照路径
 struct GameSnapshotPath {
+  // 智能体ID
   int agent_id;
+  // 路径
   std::vector<int> path;
+  // 花费的时间片
   int period;
 };
 
+// 快照的结果，包含了一个时间片的各种信息
 struct GameSnapshotResultType {
+  // 时间片
   int time_step;
+  // 路径规划
   std::vector<GameSnapshotPath> agents;
+  // 收益集合
   std::vector<int> rewards;
+  // 当前时间下的收益
+  double gain;
 };
 
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameSnapshotResultType &c);
@@ -122,7 +160,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
 class GameSnapshot {
 public:
   GameSnapshot(GameEnvConfig& config);
-  int commit(const std::vector<GameAgentPtr>& agents, const std::vector<GameReward>& rewards);
+  int commit(const std::vector<GameAgentPtr>& agents, const std::vector<GameRewardPtr>& rewards, double gain);
   std::optional<GameSnapshotResultType> get(int time_step);
 private:
   std::mutex lock_mutex;
@@ -130,6 +168,7 @@ private:
 
   std::vector<std::vector<int>> rewards_position;
   std::vector<std::vector<GameSnapshotPath>> agent_path;
+  std::vector<double> gains;
   GameEnvConfig& config;
 };
 
@@ -165,19 +204,23 @@ public:
   ~GameEnv();
   int commit();
   GameEnvDetail detail();
+  GameRewardPtr create_reward();
 
   std::vector<GameStatePtr> graph;
   std::vector<std::vector<GameStatePtr>> position_graph;
   std::vector<std::vector<GameStatePtr>> time_step_graph;
 
   std::vector<GameAgentPtr> agents;
-  std::vector<GameReward> rewards;
+  std::vector<GameRewardPtr> rewards;
+  double gain;
   int position_num;
   int time_step;
   int agent_number;
-  
+
   GameEnvConfig config;
   GameSnapshot *snapshot;
+
+  std::map<std::string, generate_ext_func_type> reward_ext_funs;
 private:
   int read_from_grid();
   GameEnvDetail m_detail;

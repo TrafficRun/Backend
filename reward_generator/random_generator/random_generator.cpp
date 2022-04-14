@@ -12,15 +12,11 @@ RandomGenerator::RandomGenerator(GameConfig& config, GameEnv& env) :
   reward_number = boost::any_cast<int>(config.ext_config[generator_name]["reward_number"]);
 }
 
-#include <iostream>
-
 int RandomGenerator::generate(int now_time) {
-  env.rewards.clear();
   for (int loop_i = 0; loop_i < reward_number; ++loop_i) {
-    GameReward reward_item;
+    GameRewardPtr reward_item = env.create_reward();
     int status_id = 1 + env.position_num * now_time + static_cast<int>((random_gen()%env.position_num));
-    reward_item.state = env.graph[status_id];
-    env.rewards.push_back(reward_item);
+    reward_item->state = env.graph[status_id];
   }
   return 0;
 }

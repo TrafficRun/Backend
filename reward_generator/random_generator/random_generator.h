@@ -23,5 +23,4 @@ private:
 };
 
 extern int register_random_generator();
-
 #endif

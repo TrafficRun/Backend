@@ -19,5 +19,13 @@ private:
   std::mt19937 random_gen = std::mt19937(std::random_device()());
 };
 
+class SimpleRandomActionExt : public GameExtType {
+public:
+  ~SimpleRandomActionExt(){};
+  static SimpleRandomActionExt* get_ext(GameActionPtr maction);
+  static GameExtType* create_ext(const void * maction);
+  int agent_number;
+};
+
 extern int register_simple_random_model();
 #endif

@@ -1,5 +1,4 @@
 #include "simple_random.h"
-
 #include <string>
 
 const std::string SimpleRandomModel::model_name = "simple_random";
@@ -32,6 +31,15 @@ extern int register_simple_random_model() {
   model_info.model_name = SimpleRandomModel::model_name;
   model_info.generate_func = generate_simple_random_model;
   model_info.parameters = {};
+  model_info.ext_info[ext_slot_type_string[ExtSlotTypeAction]] = &SimpleRandomActionExt::create_ext;
   register_model(model_info);
   return 0;
+}
+
+GameExtType* SimpleRandomActionExt::create_ext(const void * maction) {
+  return new SimpleRandomActionExt;
+}
+
+SimpleRandomActionExt* SimpleRandomActionExt::get_ext(GameActionPtr maction) {
+  return static_cast<SimpleRandomActionExt *>(maction->ext_slot[SimpleRandomModel::model_name]);
 }

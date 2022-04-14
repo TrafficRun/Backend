@@ -14,6 +14,7 @@ public:
 private:
   GameEnv &env;
   GameConfig& config;
+  int add_exts(const std::string &ext_name, const std::map<std::string, generate_ext_func_type>& exts);
 };
 
 #endif

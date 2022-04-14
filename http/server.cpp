@@ -223,7 +223,8 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
  *     "path": [int, ...],
  *     "period": int
  *   }],
- *   "rewards": [int, ...]
+ *   "rewards": [int, ...],
+ *   "gain": double
  * }
  */
 void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {

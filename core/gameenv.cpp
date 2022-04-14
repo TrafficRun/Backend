@@ -64,8 +64,17 @@ GameEnv::GameEnv(GameConfig& _config):
   snapshot = new GameSnapshot(config);
 }
 
+GameRewardPtr GameEnv::create_reward() {
+  GameRewardPtr result = std::make_shared<GameReward>();
+  for (const auto& item : reward_ext_funs) {
+    result->ext_slot[item.first] = item.second(result.get());
+  }
+  this->rewards.push_back(result);
+  return result;
+}
+
 int GameEnv::commit() {
-  snapshot->commit(agents, rewards);
+  snapshot->commit(agents, rewards, gain);
   return 0;
 }
 
@@ -225,8 +234,9 @@ GameSnapshot::GameSnapshot(GameEnvConfig& config) :
   agents_position_snapshot = std::vector<int>(config.agent_number.value(), -1);  
 }
 
-int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vector<GameReward> &rewards) {
+int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vector<GameRewardPtr> &rewards, double gain) {
   std::lock_guard<std::mutex> lock(lock_mutex);
+  this->gains.push_back(gain);
   std::vector<int> new_agent_position(agents.size(), 0);
 
   std::transform(agents.begin(), agents.end(), new_agent_position.begin(), [](const GameAgentPtr& agent_item){
@@ -257,8 +267,8 @@ int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vec
   this->agent_path.push_back(new_agent_path);
 
   std::vector<int> new_rewards_position(rewards.size(), 0);
-  std::transform(rewards.begin(), rewards.end(), new_rewards_position.begin(), [](const GameReward& item) {
-    return item.state->position_id;
+  std::transform(rewards.begin(), rewards.end(), new_rewards_position.begin(), [](const GameRewardPtr& item) {
+    return item->state->position_id;
   });
 
   rewards_position.push_back(new_rewards_position);
@@ -273,6 +283,7 @@ std::optional<GameSnapshotResultType> GameSnapshot::get(int time_step) {
   result.time_step = time_step;
   result.agents = agent_path[time_step];
   result.rewards = rewards_position[time_step];
+  result.gain = this->gains[time_step];
   return result;
 }
 
@@ -295,7 +306,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
     {"time_step", c.time_step},
     {"agents", agent},
     {"rewards", c.rewards},
-    {"gain", c.time_step}
+    {"gain", c.gain}
   });
 }
 

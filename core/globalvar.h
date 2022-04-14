@@ -5,20 +5,34 @@
 #include "commconfig.h"
 #include "gameenv.h"
 
-typedef ModelBaseType* (*generate_model_func_type)(GameConfig& config, GameEnv& env);
+#include <functional>
+
+typedef std::function<ModelBaseType*(GameConfig& config, GameEnv& env)> generate_model_func_type;
+
+enum ExtSlotType {
+  ExtSlotTypeAgent = 0,
+  ExtSlotTypeReward = 1,
+  ExtSlotTypeState = 2,
+  ExtSlotTypeAction = 3,
+  ExtSlotTypeTransition = 4
+};
+
+extern const std::vector<std::string> ext_slot_type_string;
 
 struct ModelType {
   std::string model_name;
   std::vector<ParameterItemType> parameters;
   generate_model_func_type generate_func;
+  std::map<std::string, generate_ext_func_type> ext_info;
 };
 
-typedef GeneratorBaseType* (*generate_generator_fun_type)(GameConfig& config, GameEnv& env);
+typedef std::function<GeneratorBaseType*(GameConfig& config, GameEnv& env)> generate_generator_fun_type;
 
 struct GeneratorType {
   std::string generator_name;
   std::vector<ParameterItemType> parameters;
   generate_generator_fun_type generate_func;
+  std::map<std::string, generate_ext_func_type> ext_info;
 };
 
 class GlobalVar {
