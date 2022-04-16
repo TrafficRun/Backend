@@ -172,6 +172,25 @@ private:
   GameEnvConfig& config;
 };
 
+// 真实地图的表述
+struct GameGraphMapDetail {
+  // 节点的结构体
+  typedef struct {
+    int x;
+    int y;
+  } NodeDescType;
+  // 边的描述
+  typedef struct {
+    int begin_node_index;
+    int end_node_index;
+  } EdgeDescType;
+public:
+  const static std::string graph_type;
+  std::vector<NodeDescType> nodes;
+  std::vector<EdgeDescType> edges;
+};
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameGraphMapDetail const &c);
 
 struct GameGraphGridDetail {
 public:

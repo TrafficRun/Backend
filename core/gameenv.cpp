@@ -10,6 +10,8 @@
 
 const std::string GameGraphGridDetail::graph_type = "grid";
 
+const std::string GameGraphMapDetail::graph_type = "map";
+
 extern int register_game_env_config() {
   std::vector<std::string> graph_type_list = {"grid"};
   ParameterBaseTypeEnumExtType graph_type_ext;
@@ -236,7 +238,11 @@ GameSnapshot::GameSnapshot(GameEnvConfig& config) :
 
 int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vector<GameRewardPtr> &rewards, double gain) {
   std::lock_guard<std::mutex> lock(lock_mutex);
-  this->gains.push_back(gain);
+  if (this->gains.size() == 0) {
+    this->gains.push_back(gain);
+  } else {
+    this->gains.push_back(gain + gains.back());
+  }
   std::vector<int> new_agent_position(agents.size(), 0);
 
   std::transform(agents.begin(), agents.end(), new_agent_position.begin(), [](const GameAgentPtr& agent_item){
@@ -324,5 +330,28 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Game
     {"graph_type", c.graph_type},
     {"graph", graph},
     {"agent_number", c.agent_number}
+  });
+}
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameGraphMapDetail const &c) {
+  boost::json::array nodes;
+  boost::json::array edges;
+  for (const auto& node : c.nodes) {
+    nodes.push_back(boost::json::value({
+      {"x", node.x},
+      {"y", node.y}
+    }));
+  }
+
+  for (const auto& edge : c.edges) {
+    edges.push_back(boost::json::value({
+      {"begin_node_index", edge.begin_node_index},
+      {"end_node_index", edge.end_node_index}
+    }));
+  }
+
+  jv = boost::json::value({
+    {"nodes", nodes},
+    {"edges", edges}
   });
 }
