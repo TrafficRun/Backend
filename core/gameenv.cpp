@@ -8,6 +8,8 @@
 
 #include "globalvar.h"
 
+#define ALGO_JSON_STREAM_SIZE 102400
+
 const std::string GameGraphGridDetail::graph_type = "grid";
 
 const std::string GameGraphMapDetail::graph_type = "map";
@@ -66,6 +68,155 @@ GameEnv::GameEnv(GameConfig& _config):
   snapshot = new GameSnapshot(config);
 }
 
+/**
+ * map文件格式内容
+ * {
+ *   time_step: number,
+ *   node: [{
+ *     x: number,
+ *     y: number
+ *   }],
+ *   edge: [{
+ *     begin_node_index: int,
+ *     end_node_index: int,
+ *     status: [{ // 数量和时间一致，代表每一个时刻当前边的状态
+ *       reward: int,
+ *       transitions: [{
+ *         probability: double, // 转移概率
+ *         period: int,         // 转移的时间间隔
+ *         path: [int]          // 包含起点和终点的转移路径
+ *       }] 
+ *     }]
+ *   }]
+ * }
+ */
+
+int GameEnv::read_from_map() {
+  auto graph_fp = fopen(config.graph_file->c_str(), "r");
+  if (graph_fp == NULL) {
+    exit(-1);
+  }
+
+  boost::json::stream_parser json_stm;
+  json_stm.reset();
+  char *json_buff = (char *)malloc(sizeof(char) * ALGO_JSON_STREAM_SIZE);
+  size_t json_buff_read_size = 0;
+  while ((json_buff_read_size = fread(json_buff, sizeof(char), ALGO_JSON_STREAM_SIZE, graph_fp)) != 0) {
+    json_stm.write(json_buff, json_buff_read_size/sizeof(char));
+  }
+  json_stm.finish();
+  free(json_buff);
+  fclose(graph_fp);
+
+  boost::json::object map_json_obj = json_stm.release().as_object();
+  boost::json::array nodes = map_json_obj["nodes"].as_array();
+  boost::json::array edges = map_json_obj["edges"].as_array();
+  GameGraphMapDetail m_map_detail;
+  for (const auto& edge: edges) {
+    GameGraphMapDetail::EdgeDescType edge_desc;
+    edge_desc.begin_node_index = edge.as_object().at("begin_node_index").as_int64();
+    edge_desc.end_node_index = edge.as_object().at("begin_node_index").as_int64();
+    m_map_detail.edges.push_back(edge_desc);
+  }
+
+  for (const auto& node: nodes) {
+    GameGraphMapDetail::NodeDescType node_desc;
+    node_desc.x = node.as_object().at("x").as_int64();
+    node_desc.y = node.as_object().at("y").as_int64();
+    m_map_detail.nodes.push_back(node_desc);
+  }
+
+  m_detail.graph_type = GameGraphMapDetail::graph_type;
+  m_detail.time_step = time_step;
+  m_detail.agent_number = agent_number;
+  m_detail.graph = m_map_detail;
+
+  position_num = nodes.size();
+
+  // 开始节点
+  GameStatePtr begin_state = new GameState();
+  begin_state->state_id = 0;
+  begin_state->position_id = -1;
+  begin_state->period = -1;
+  graph.push_back(begin_state);
+
+  time_step_graph = std::vector<std::vector<GameStatePtr>>(time_step, std::vector<GameStatePtr>());
+  position_graph = std::vector<std::vector<GameStatePtr>>(nodes.size(), std::vector<GameStatePtr>());
+
+  for (int loop_time = 0; loop_time < time_step; ++loop_time) {
+    for (int loop_node = 0; loop_node < nodes.size(); ++loop_node) {
+      auto state = new GameState;
+      state->state_id = graph.size();
+      state->position_id = loop_node;
+      state->period = loop_time;
+
+      graph.push_back(state);
+      time_step_graph[loop_time].push_back(state);
+      position_graph[loop_node].push_back(state);
+    }
+  }
+
+  // 结束节点
+  GameStatePtr end_state = new GameState;
+  end_state->state_id = graph.size();
+  end_state->position_id = -1;
+  end_state->period = -1;
+  graph.push_back(end_state);
+
+  // 添加边
+  // 起点
+  for (int loop_node = 0; loop_node < nodes.size(); ++loop_node) {
+    auto begin_node_action = new GameAction;
+    begin_node_action->action_id = graph[0]->actions.size();
+    auto transition = new GameTransition;
+    transition->transition_id = 0;
+    transition->target = time_step_graph[0][loop_node];
+    begin_node_action->transitions.push_back(transition);
+    graph[0]->actions.push_back(begin_node_action);
+  }
+
+  // 中间部件
+  for (const auto& edge : edges) {
+    int begin_node_index = edge.at("begin_node_index").as_int64();
+    int end_node_index = edge.at("end_node_index").as_int64();
+    
+    for (int loop_time = 0; loop_time < time_step - 1; ++loop_time) {
+      auto m_state = graph[1 + loop_time * position_num + begin_node_index];
+      auto m_edge_status_json_obj = edge.at("status").as_array()[loop_time].as_object();
+
+      auto m_action = new GameAction;
+      m_action->action_id = m_state->actions.size();
+      m_state->actions.push_back(m_action);
+      
+      for (auto trans : edge.at("transitions").as_array()) {
+        auto mtran = new GameTransition;
+        mtran->transition_id = m_action->transitions.size();
+        int period = trans.at("period").as_int64();
+        if (loop_time + period >= time_step) continue;
+        int end_time_step = loop_time + period;
+        auto m_end_state = graph[1 + end_time_step * position_num + end_node_index];
+        mtran->target = m_end_state;
+        m_action->transitions.push_back(mtran);
+      }
+    }
+  }
+
+  // 最后一个时间片
+  for (int loop_node = 0; loop_node < position_num; ++loop_node) {
+    auto m_state = graph[1 + loop_node + position_num * (time_step - 1)];
+    auto m_action = new GameAction;
+    m_action->action_id = m_state->actions.size();
+    m_state->actions.push_back(m_action);
+
+    auto m_tran = new GameTransition;
+    m_tran->transition_id = 0;
+    m_tran->target = graph.back();
+    m_action->transitions.push_back(m_tran);
+  }
+
+  return 0;
+}
+
 GameRewardPtr GameEnv::create_reward() {
   GameRewardPtr result = std::make_shared<GameReward>();
   for (const auto& item : reward_ext_funs) {
@@ -101,7 +252,6 @@ int GameEnv::read_from_grid() {
   int action_num = ext_action_num + 4;
   position_num = width * height;
   config.position_num = position_num;
-  m_detail.time_step = time_step;
 
   double *action_reward = new double[time_step * width * height * action_num]();
   double *action_transition_pro = new double[time_step * width * height * action_num * transition_pro_num];

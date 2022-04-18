@@ -212,7 +212,7 @@ public:
   // 智能体数量
   int agent_number;
   // 图详细信息
-  std::variant<GameGraphGridDetail> graph;
+  std::variant<GameGraphGridDetail, GameGraphMapDetail> graph;
 };
 
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameEnvDetail const &c);
@@ -242,6 +242,7 @@ public:
   std::map<std::string, generate_ext_func_type> reward_ext_funs;
 private:
   int read_from_grid();
+  int read_from_map();
   GameEnvDetail m_detail;
 };
 
