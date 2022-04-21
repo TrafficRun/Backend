@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "model/simple_reandom/simple_random.h"
+#include "model/online_gapi/online_gapi.h"
 #include "reward_generator/random_generator/random_generator.h"
 
 #include "core/cmdline.h"
@@ -9,6 +10,7 @@
 
 int main (int argc, char *argv[]) {
   register_random_generator();
+  register_online_gapi_model();
   register_simple_random_model();
   register_game_env_config();
   register_game_config();

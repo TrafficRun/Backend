@@ -68,7 +68,7 @@ GameEnv::GameEnv(GameConfig& _config):
   snapshot = new GameSnapshot(config);
 }
 
-/**
+/** TODO
  * map文件格式内容
  * {
  *   time_step: number,
@@ -90,7 +90,6 @@ GameEnv::GameEnv(GameConfig& _config):
  *   }]
  * }
  */
-
 int GameEnv::read_from_map() {
   auto graph_fp = fopen(config.graph_file->c_str(), "r");
   if (graph_fp == NULL) {

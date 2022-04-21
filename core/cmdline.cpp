@@ -79,7 +79,7 @@ int CMDLine::generate_parser(boost::program_options::options_description& option
     case ParameterBaseType_RANGE: {
       auto ext_data = boost::any_cast<ParameterBaseTypeRangeExtType>(item.ext_slot.value());
       if (ext_data.is_continue) {
-        options.add_options()(item.name.c_str(), boost::program_options::value<float>()->default_value(boost::any_cast<float>(item.default_value)), item.description.c_str());
+        options.add_options()(item.name.c_str(), boost::program_options::value<double>()->default_value(boost::any_cast<double>(item.default_value)), item.description.c_str());
       } else {
         options.add_options()(item.name.c_str(), boost::program_options::value<int>()->default_value(boost::any_cast<int>(item.default_value)), item.description.c_str());
       }

@@ -266,7 +266,7 @@ boost::any HttpServer::get_param(const std::string& value, const ParameterItemTy
       result = value;
     break;
     case ParameterBaseType_RANGE: {
-      const auto& ext_data = boost::any_cast<ParameterBaseTypeRangeExtType>(item.ext_slot);
+      const auto& ext_data = boost::any_cast<ParameterBaseTypeRangeExtType>(item.ext_slot.value());
       if (ext_data.is_continue) {
         result = std::atof(value.c_str());
       } else {
