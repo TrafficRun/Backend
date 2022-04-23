@@ -13,12 +13,12 @@
 class GameEnvConfig {
 public:
   GameEnvConfig(GameConfig& config);
-  std::optional<std::string> graph_file;
-  std::optional<std::string> graph_type;
+  std::string graph_file;
+  std::string graph_type;
 
-  std::optional<int> time_step;
-  std::optional<int> agent_number;
-  std::optional<int> position_num;
+  int time_step;
+  int agent_number;
+  int position_num;
 };
 
 // 注册环境配置

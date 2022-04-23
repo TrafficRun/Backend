@@ -20,7 +20,7 @@ int main (int argc, char *argv[]) {
 
   cmd.parse_cmd(argc, argv, config);
 
-  if (config.online.value()) {
+  if (config.online) {
     HttpServer serv(config);
     serv.run();
     return 0;

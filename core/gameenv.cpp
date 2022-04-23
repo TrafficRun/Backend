@@ -52,10 +52,10 @@ GameEnv::~GameEnv() {
 GameEnv::GameEnv(GameConfig& _config):
   config(_config)
 {
-  time_step = config.time_step.value();
-  agent_number = config.agent_number.value();
+  time_step = config.time_step;
+  agent_number = config.agent_number;
   m_detail.agent_number = agent_number;
-  if (config.graph_type.value() == "grid") {
+  if (config.graph_type == "grid") {
     read_from_grid();
   }
 
@@ -91,7 +91,7 @@ GameEnv::GameEnv(GameConfig& _config):
  * }
  */
 int GameEnv::read_from_map() {
-  auto graph_fp = fopen(config.graph_file->c_str(), "r");
+  auto graph_fp = fopen(config.graph_file.c_str(), "r");
   if (graph_fp == NULL) {
     exit(-1);
   }
@@ -231,7 +231,7 @@ int GameEnv::commit() {
 }
 
 int GameEnv::read_from_grid() {
-  auto graph_fp = fopen(config.graph_file->c_str(), "r");
+  auto graph_fp = fopen(config.graph_file.c_str(), "r");
   if (graph_fp == NULL) {
     exit(-1);
   }
@@ -382,7 +382,7 @@ int GameEnv::read_from_grid() {
 GameSnapshot::GameSnapshot(GameEnvConfig& config) :
   config(config)
 {
-  agents_position_snapshot = std::vector<int>(config.agent_number.value(), -1);  
+  agents_position_snapshot = std::vector<int>(config.agent_number, -1);  
 }
 
 int GameSnapshot::commit(
@@ -410,8 +410,8 @@ int GameSnapshot::commit(
       } else {
         new_agent_path.push_back({
           loop_i,
-          {(agents_position_snapshot[loop_i] - 1) % config.position_num.value(), (new_agent_position[loop_i] - 1) % config.position_num.value()},
-          ((new_agent_position[loop_i] - 1) / config.position_num.value() - (agents_position_snapshot[loop_i] - 1) / config.position_num.value())
+          {(agents_position_snapshot[loop_i] - 1) % config.position_num, (new_agent_position[loop_i] - 1) % config.position_num},
+          ((new_agent_position[loop_i] - 1) / config.position_num - (agents_position_snapshot[loop_i] - 1) / config.position_num)
         });
       }
     }

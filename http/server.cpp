@@ -48,7 +48,7 @@ int HttpServer::run() {
     {"Access-Control-Allow-Origin", "*"},
     {"Access-Control-Allow-Methods", "POST,GET,OPTIONS,DELETE"}
   });
-  serv.listen(config.server->c_str(), config.port.value());
+  serv.listen(config.server.c_str(), config.port);
   return 0;  
 }
 
@@ -86,9 +86,9 @@ void HttpServer::http_get_common_config(const req_type& req, rsp_type& rsp) {
     temp_global_parameters_map[temp_global_parameters[loop_i].name] = loop_i;
   }
 
-  temp_global_parameters[temp_global_parameters_map["server"]].default_value = config.server.value();
-  temp_global_parameters[temp_global_parameters_map["online"]].default_value = config.online.value();
-  temp_global_parameters[temp_global_parameters_map["port"]].default_value = config.port.value();
+  temp_global_parameters[temp_global_parameters_map["server"]].default_value = config.server;
+  temp_global_parameters[temp_global_parameters_map["online"]].default_value = config.online;
+  temp_global_parameters[temp_global_parameters_map["port"]].default_value = config.port;
 
   bj::value result = bj::value({
     {"global", temp_global_parameters},
