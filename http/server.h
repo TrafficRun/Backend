@@ -8,9 +8,15 @@
 #include "cpp-httplib/httplib.h"
 #include "SQLiteCpp/SQLiteCpp.h"
 
+#include "task_db.h"
+
 #include <boost/json.hpp>
 #include <boost/any.hpp>
 #include <thread>
+
+namespace bj = boost::json;
+namespace hl = httplib;
+namespace pl = std::placeholders;
 
 class GameRunHandle {
 public:
@@ -45,6 +51,8 @@ private:
   std::string result_from(int code, const boost::json::value& data);
   GameConfig& config;
   std::map<std::string, std::shared_ptr<GameRunHandle>> run_handles;
+  hl::Server serv;
+  std::shared_ptr<TaskDB> task_db;
 };
 
 #endif

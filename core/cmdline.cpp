@@ -138,6 +138,7 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
   config.online = (var_map.count("online") >= 1);
   config.port = var_map["port"].as<int>();
   config.server = var_map["server"].as<std::string>();
+  config.database = var_map["database"].as<std::string>();
   config.model_name = var_map["model_name"].as<std::string>();
   config.generator_name = var_map["generator_name"].as<std::string>();
 

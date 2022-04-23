@@ -18,6 +18,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(Boost REQUIRED program_options system chrono atomic timer json)
 find_package(Threads REQUIRED)
 
+set(SQLITECPP_RUN_CPPLINT OFF)
+
 add_subdirectory(./thirdparty/cpp-httplib/)
 add_subdirectory(./thirdparty/SQLiteCpp)
 

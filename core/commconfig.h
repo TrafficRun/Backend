@@ -16,6 +16,7 @@ public:
   bool online;
   std::string server;
   int port;
+  std::string database;
   std::string model_name;
   std::string generator_name;
 

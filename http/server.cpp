@@ -20,15 +20,8 @@
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 
-namespace bj = boost::json;
-namespace hl = httplib;
-namespace pl = std::placeholders;
-
 const static char* http_json_mine_type = "application/json";
-HttpServer::HttpServer(GameConfig& config) : config(config) {}
-
-int HttpServer::run() {
-  hl::Server serv;
+HttpServer::HttpServer(GameConfig& config) : config(config) {
   serv.set_logger(std::bind(&HttpServer::logger, this, pl::_1, pl::_2));
   // 返回公共信息
   serv.Get("/comm_config", std::bind(&HttpServer::http_get_common_config, this, pl::_1, pl::_2));
@@ -48,6 +41,12 @@ int HttpServer::run() {
     {"Access-Control-Allow-Origin", "*"},
     {"Access-Control-Allow-Methods", "POST,GET,OPTIONS,DELETE"}
   });
+
+  // 初始化数据库
+  task_db = std::make_shared<TaskDB>(config.database);
+}
+
+int HttpServer::run() {
   serv.listen(config.server.c_str(), config.port);
   return 0;  
 }
