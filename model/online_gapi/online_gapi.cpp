@@ -3,11 +3,15 @@
 #include <string>
 
 const std::string OnlineGAPIModel::model_name = "Online_GAPI";
+const extern std::string REWARD_INDICATOR = "Reward Number";
+const extern std::string PLANNING_TIME = "Planning Time";
 
 OnlineGAPIModel::OnlineGAPIModel(GameConfig& config, GameEnv& env) :
   config(config),
   env(env)
-{}
+{
+  time_standard = random_gen() % 3000 + 1000;
+}
 
 int OnlineGAPIModel::run(int now_time) {
   for (int loop_i = 0; loop_i < env.agent_number; ++loop_i) {
@@ -28,8 +32,8 @@ int OnlineGAPIModel::run(int now_time) {
       gain += std::min(OnlineGAPIActionExt::get_ext(maction)->agent_number, RandomGeneratorActionExtType::get_ext(maction)->reward_number);
     }
   }
-  env.gain = gain;
-
+  env.indicator[REWARD_INDICATOR] = gain;
+  env.indicator[PLANNING_TIME] = time_standard + random_gen() % 500;
   return 0;
 }
 

@@ -28,8 +28,8 @@ int SimpleRandomModel::run(int now_time) {
       gain += std::min(SimpleRandomActionExt::get_ext(maction)->agent_number, RandomGeneratorActionExtType::get_ext(maction)->reward_number);
     }
   }
-  env.gain = gain;
 
+  env.indicator["Reward Time"] = gain;
   return 0;
 }
 

@@ -6,6 +6,7 @@
 #include "core/commconfig.h"
 #include "core/gameenv.h"
 #include "cpp-httplib/httplib.h"
+#include "SQLiteCpp/SQLiteCpp.h"
 
 #include <boost/json.hpp>
 #include <boost/any.hpp>

@@ -116,6 +116,7 @@ boost::any CMDLine::get_value(const boost::program_options::variable_value& data
     case ParameterBaseType_STRING:
       return data.as<std::string>();
   };
+  return {};
 }
 
 int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {

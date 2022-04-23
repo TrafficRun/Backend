@@ -1,5 +1,5 @@
-[submodule "cpp-httplib"]
-	path = cpp-httplib
+[submodule "thirdparty/cpp-httplib"]
+	path = thirdparty/cpp-httplib
 	url = git@github.com:yhirose/cpp-httplib.git
 [submodule "thirdparty/SQLiteCpp"]
 	path = thirdparty/SQLiteCpp

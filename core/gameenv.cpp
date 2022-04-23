@@ -226,7 +226,7 @@ GameRewardPtr GameEnv::create_reward() {
 }
 
 int GameEnv::commit() {
-  snapshot->commit(agents, rewards, gain);
+  snapshot->commit(agents, rewards, indicator);
   return 0;
 }
 
@@ -385,13 +385,12 @@ GameSnapshot::GameSnapshot(GameEnvConfig& config) :
   agents_position_snapshot = std::vector<int>(config.agent_number.value(), -1);  
 }
 
-int GameSnapshot::commit(const std::vector<GameAgentPtr> &agents, const std::vector<GameRewardPtr> &rewards, double gain) {
+int GameSnapshot::commit(
+  const std::vector<GameAgentPtr> &agents,
+  const std::vector<GameRewardPtr> &rewards,
+  const std::map<std::string, double>& indicator) {
   std::lock_guard<std::mutex> lock(lock_mutex);
-  if (this->gains.size() == 0) {
-    this->gains.push_back(gain);
-  } else {
-    this->gains.push_back(gain + gains.back());
-  }
+  this->indicators.push_back(indicator);
   std::vector<int> new_agent_position(agents.size(), 0);
 
   std::transform(agents.begin(), agents.end(), new_agent_position.begin(), [](const GameAgentPtr& agent_item){
@@ -438,7 +437,7 @@ std::optional<GameSnapshotResultType> GameSnapshot::get(int time_step) {
   result.time_step = time_step;
   result.agents = agent_path[time_step];
   result.rewards = rewards_position[time_step];
-  result.gain = this->gains[time_step];
+  result.indicator = this->indicators[time_step];
   return result;
 }
 
@@ -461,7 +460,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
     {"time_step", c.time_step},
     {"agents", agent},
     {"rewards", c.rewards},
-    {"gain", c.gain}
+    {"indicator", c.indicator}
   });
 }
 

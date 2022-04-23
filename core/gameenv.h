@@ -151,7 +151,7 @@ struct GameSnapshotResultType {
   // 收益集合
   std::vector<int> rewards;
   // 当前时间下的收益
-  double gain;
+  std::map<std::string, double> indicator;
 };
 
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameSnapshotResultType &c);
@@ -160,7 +160,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, cons
 class GameSnapshot {
 public:
   GameSnapshot(GameEnvConfig& config);
-  int commit(const std::vector<GameAgentPtr>& agents, const std::vector<GameRewardPtr>& rewards, double gain);
+  int commit(const std::vector<GameAgentPtr>& agents, const std::vector<GameRewardPtr>& rewards, const std::map<std::string, double>& indicator);
   std::optional<GameSnapshotResultType> get(int time_step);
 private:
   std::mutex lock_mutex;
@@ -168,7 +168,7 @@ private:
 
   std::vector<std::vector<int>> rewards_position;
   std::vector<std::vector<GameSnapshotPath>> agent_path;
-  std::vector<double> gains;
+  std::vector<std::map<std::string, double>> indicators;
   GameEnvConfig& config;
 };
 
@@ -231,7 +231,7 @@ public:
 
   std::vector<GameAgentPtr> agents;
   std::vector<GameRewardPtr> rewards;
-  double gain;
+  std::map<std::string, double> indicator;
   int position_num;
   int time_step;
   int agent_number;
