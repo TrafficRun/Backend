@@ -19,6 +19,7 @@ public:
   std::string database;
   std::string model_name;
   std::string generator_name;
+  std::string simulate_name;
 
   std::map<std::string, std::map<std::string, boost::any>> ext_config;
 };

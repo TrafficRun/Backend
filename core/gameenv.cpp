@@ -8,6 +8,7 @@
 
 #include "globalvar.h"
 
+
 #define ALGO_JSON_STREAM_SIZE 102400
 
 const std::string GameGraphGridDetail::graph_type = "grid";
@@ -474,6 +475,7 @@ extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, Game
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value& jv, GameEnvDetail const &c) {
   boost::json::value graph = boost::json::value_from(std::get<GameGraphGridDetail>(c.graph));
   jv = boost::json::value({
+    {"uid", c.uid},
     {"time_step", c.time_step},
     {"graph_type", c.graph_type},
     {"graph", graph},

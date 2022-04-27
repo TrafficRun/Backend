@@ -23,6 +23,7 @@ int main (int argc, char *argv[]) {
   if (config.online) {
     HttpServer serv(config);
     serv.run();
+    printf("Run Over? \n");
     return 0;
   }
 

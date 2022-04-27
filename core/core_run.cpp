@@ -5,11 +5,16 @@
 #include <numeric>
 #include <iostream>
 
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 CoreRun::CoreRun(GameConfig& config, GameEnv& env) : 
   env(env),
   config(config)
 {
-
+  uid = boost::uuids::to_string(boost::uuids::random_generator()());
+  simulate_name = config.simulate_name;
 }
 
 int CoreRun::run() {

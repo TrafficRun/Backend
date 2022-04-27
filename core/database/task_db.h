@@ -1,10 +1,12 @@
-#ifndef __HTTP_TASK_DB_H
-#define __HTTP_TASK_DB_H
+#ifndef __CORE_DATABASE_TASK_DB_H
+#define __CORE_DATABASE_TASK_DB_H
 
 #include "SQLiteCpp/SQLiteCpp.h"
 #include <memory>
 #include <optional>
 #include <vector>
+
+#include <boost/json.hpp>
 
 struct TaskDBRecordType {
   int sid;
@@ -16,6 +18,8 @@ struct TaskDBRecordType {
   int create_time;
   int finish_time;
 };
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const TaskDBRecordType &c);
 
 enum TaskDBRecordStatusEnumType {
   TaskDBRecordStatusEnumType_RUNNING = 0,

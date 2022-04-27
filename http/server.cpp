@@ -16,9 +16,6 @@
 
 #include <boost/json.hpp>
 #include <boost/any.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
 
 const static char* http_json_mine_type = "application/json";
 HttpServer::HttpServer(GameConfig& config) : config(config) {
@@ -41,14 +38,11 @@ HttpServer::HttpServer(GameConfig& config) : config(config) {
     {"Access-Control-Allow-Origin", "*"},
     {"Access-Control-Allow-Methods", "POST,GET,OPTIONS,DELETE"}
   });
-
-  // 初始化数据库
-  task_db = std::make_shared<TaskDB>(config.database);
 }
 
 int HttpServer::run() {
   serv.listen(config.server.c_str(), config.port);
-  return 0;  
+  return 0;
 }
 
 void HttpServer::http_get_version(const req_type& req, rsp_type& rsp) {
@@ -188,12 +182,10 @@ void HttpServer::http_post_begin_simulate(const req_type& req, rsp_type& rsp) {
   }
   fconfig.ext_config["env"] = env_set_config;
 
-  std::string token = boost::uuids::to_string(boost::uuids::random_generator()());
   auto run_handle = std::make_shared<GameRunHandle>(fconfig);
-  run_handles[token] = run_handle;
+  run_handles[run_handle->get_env_detail().uid] = run_handle;
 
   auto returnJsonObj = boost::json::value_from(run_handle->get_env_detail()).as_object();
-  returnJsonObj["token"] = token;
 
   rsp.set_content(result_from(0, returnJsonObj), http_json_mine_type);
 }
@@ -228,7 +220,7 @@ std::string HttpServer::result_from(int code, const bj::value& data) {
  */
 void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
   int time_step = std::atoi(req.get_param_value("time_step").c_str());
-  std::string run_token = req.get_param_value("token");
+  std::string run_token = req.get_param_value("uid");
   if (run_handles.find(run_token) != run_handles.end()) {
     const auto& run_handle = run_handles[run_token];
     auto result_data = run_handle->get_snapshot(time_step);
@@ -280,15 +272,18 @@ boost::any HttpServer::get_param(const std::string& value, const ParameterItemTy
 GameRunHandle::GameRunHandle(GameConfig &config) {
   m_config = std::make_shared<GameConfig>(config);
   m_env = std::make_shared<GameEnv>(config);
+  m_core = std::make_shared<CoreRun>(*m_config, *m_env);
   m_run_handle = std::thread([&](){
-    CoreRun core(*m_config, *m_env);
-    core.run();
+    m_core->run();
     m_is_finish = true;
   });
 }
 
 GameEnvDetail GameRunHandle::get_env_detail() {
-  return m_env->detail();
+  auto detail = m_env->detail();
+  detail.uid = m_core->uid;
+  detail.simulate_name = m_core->simulate_name;
+  return detail;
 }
 
 bool GameRunHandle::is_finish() {

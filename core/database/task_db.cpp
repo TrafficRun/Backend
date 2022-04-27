@@ -76,3 +76,16 @@ TaskDBRecordType TaskDB::taskRecordWapper(const sql::Statement& query) {
   result.finish_time = query.getColumn("finish_time");
   return result;
 }
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const TaskDBRecordType &c) {
+  jv = {
+    {"sid", c.sid},
+    {"sim_name", c.sim_name},
+    {"uid", c.uid},
+    {"model_name", c.model_name},
+    {"gen_name", c.gen_name},
+    {"status", c.status},
+    {"create_time", c.create_time},
+    {"finish_time", c.finish_time}
+  };
+}

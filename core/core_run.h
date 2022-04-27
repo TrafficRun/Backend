@@ -11,6 +11,8 @@ public:
   CoreRun(GameConfig& config, GameEnv& env);
   ~CoreRun(){};
   int run();
+  std::string uid;
+  std::string simulate_name;
 private:
   GameEnv &env;
   GameConfig& config;

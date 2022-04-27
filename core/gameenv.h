@@ -207,6 +207,10 @@ struct GameEnvDetail {
 public:
   // 图类型
   std::string graph_type;
+  // 别名
+  std::string simulate_name;
+  // UID
+  std::string uid;
   // 时间长度
   int time_step;
   // 智能体数量

@@ -5,10 +5,9 @@
 
 #include "core/commconfig.h"
 #include "core/gameenv.h"
+#include "core/core_run.h"
 #include "cpp-httplib/httplib.h"
 #include "SQLiteCpp/SQLiteCpp.h"
-
-#include "task_db.h"
 
 #include <boost/json.hpp>
 #include <boost/any.hpp>
@@ -27,6 +26,7 @@ public:
 private:
   std::shared_ptr<GameEnv> m_env;
   std::shared_ptr<GameConfig> m_config;
+  std::shared_ptr<CoreRun> m_core; 
   std::thread m_run_handle;
   bool m_is_finish = false;
 };
@@ -52,7 +52,6 @@ private:
   GameConfig& config;
   std::map<std::string, std::shared_ptr<GameRunHandle>> run_handles;
   hl::Server serv;
-  std::shared_ptr<TaskDB> task_db;
 };
 
 #endif
