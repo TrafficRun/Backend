@@ -77,6 +77,16 @@ TaskDBRecordType TaskDB::taskRecordWapper(const sql::Statement& query) {
   return result;
 }
 
+int TaskDB::change_status(const std::string &uid, TaskDBRecordStatusEnumType status) {
+  sql::Statement update_sql(*db_con, 
+    "UPDATE `task` SET status = @status WHERE uid = @uid;"
+  );
+  update_sql.bind("@status", status);
+  update_sql.bind("@uid", uid);
+  update_sql.exec();
+  return 0;
+}
+
 extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const TaskDBRecordType &c) {
   jv = {
     {"sid", c.sid},

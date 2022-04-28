@@ -4,6 +4,7 @@
 #include "commconfig.h"
 #include "gameenv.h"
 #include "version.h"
+#include "database/database.h"
 
 #include <boost/program_options.hpp>
 #include <boost/any.hpp>
@@ -11,7 +12,6 @@
 #include <boost/algorithm/string.hpp>
 
 #include <iostream>
-
 
 
 CMDLine::CMDLine() :
@@ -142,6 +142,9 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
   config.model_name = var_map["model_name"].as<std::string>();
   config.generator_name = var_map["generator_name"].as<std::string>();
   config.simulate_name = var_map["simulate_name"].as<std::string>();
+
+  // 初始化数据库
+  database_init(config.database);
 
   // TODO 改成插件模式
   // game env config

@@ -1,5 +1,6 @@
 #include "core_run.h"
 #include "globalvar.h"
+#include "database/database.h"
 
 #include <algorithm>
 #include <numeric>
@@ -15,6 +16,13 @@ CoreRun::CoreRun(GameConfig& config, GameEnv& env) :
 {
   uid = boost::uuids::to_string(boost::uuids::random_generator()());
   simulate_name = config.simulate_name;
+}
+
+GameEnvDetail CoreRun::detail() {
+  auto detail = env.detail();
+  detail.uid = uid;
+  detail.simulate_name = simulate_name;
+  return detail;
 }
 
 int CoreRun::run() {
@@ -42,12 +50,24 @@ int CoreRun::run() {
   // 生成器对象
   GeneratorBaseType *generator_obj = generator_config->generate_func(config, env);
 
+  // Add To sqlite
+  TaskDBRecordType record;
+  auto detail = this->detail();
+  record.sim_name = detail.simulate_name;
+  record.model_name = config.model_name;
+  record.gen_name = config.generator_name;
+  record.uid = detail.uid;
+  database->task->create(record);
+
   for (int loop_time = 0; loop_time < env.time_step; ++loop_time) {
     env.rewards.clear();
     generator_obj->generate(loop_time);
     model_obj->run(loop_time);
     env.commit();
   }
+
+  // 修改运行状态
+  database->task->change_status(detail.uid, TaskDBRecordStatusEnumType_FINISH);
 
   delete model_obj;
   delete generator_obj;

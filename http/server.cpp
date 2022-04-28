@@ -280,9 +280,7 @@ GameRunHandle::GameRunHandle(GameConfig &config) {
 }
 
 GameEnvDetail GameRunHandle::get_env_detail() {
-  auto detail = m_env->detail();
-  detail.uid = m_core->uid;
-  detail.simulate_name = m_core->simulate_name;
+  auto detail = m_core->detail();
   return detail;
 }
 

@@ -1,5 +1,7 @@
 #include "database.h"
 
+std::shared_ptr<DataBase> database = nullptr;
+
 extern void database_init(const std::string& db_file) {
   database = std::make_shared<DataBase>(db_file);
 }
