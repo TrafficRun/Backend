@@ -24,6 +24,7 @@ struct ModelType {
   std::vector<ParameterItemType> parameters;
   generate_model_func_type generate_func;
   std::map<std::string, generate_ext_func_type> ext_info;
+  std::vector<std::string> indicator_fields;
 };
 
 typedef std::function<GeneratorBaseType*(GameConfig& config, GameEnv& env)> generate_generator_fun_type;

@@ -9,6 +9,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <boost/filesystem.hpp>
 
 CoreRun::CoreRun(GameConfig& config, GameEnv& env) : 
   env(env),
@@ -16,6 +17,7 @@ CoreRun::CoreRun(GameConfig& config, GameEnv& env) :
 {
   uid = boost::uuids::to_string(boost::uuids::random_generator()());
   simulate_name = config.simulate_name;
+  work_dir = generate_work_dir();
 }
 
 GameEnvDetail CoreRun::detail() {
@@ -29,6 +31,7 @@ int CoreRun::run() {
   const auto& model_config = std::find_if(global_var.models.begin(), global_var.models.end(), [&](const ModelType& item){
     return item.model_name == config.model_name;
   });
+
   if (model_config == global_var.models.end()) {
     std::cout << "Not Such Model." << std::endl;
     std::exit(-1);
@@ -59,11 +62,17 @@ int CoreRun::run() {
   record.uid = detail.uid;
   database->task->create(record);
 
+  // 生成记录表
+  boost::filesystem::path work_dir_path(work_dir);
+  boost::filesystem::path indicator_path = work_dir_path / "indicator.csv";
+  table_record = std::make_shared<TableRecord>(indicator_path.generic_string(), model_config->indicator_fields);
+
   for (int loop_time = 0; loop_time < env.time_step; ++loop_time) {
     env.rewards.clear();
     generator_obj->generate(loop_time);
     model_obj->run(loop_time);
     env.commit();
+    table_record->log(env.indicator);
   }
 
   // 修改运行状态
@@ -110,4 +119,14 @@ int CoreRun::add_exts(const std::string &ext_name, const std::map<std::string, g
   }
 
   return 0;
+}
+
+std::string CoreRun::generate_work_dir() {
+  boost::filesystem::path work_root_dir(config.work_root_dir);
+  boost::filesystem::path work_dir(this->uid);
+  boost::filesystem::path full_path = work_root_dir / work_dir;
+  if (!boost::filesystem::exists(full_path)) {
+    boost::filesystem::create_directories(full_path);
+  }
+  return full_path.generic_string();
 }

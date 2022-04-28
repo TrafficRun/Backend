@@ -20,6 +20,7 @@ public:
   std::string model_name;
   std::string generator_name;
   std::string simulate_name;
+  std::string work_root_dir;
 
   std::map<std::string, std::map<std::string, boost::any>> ext_config;
 };

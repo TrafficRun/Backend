@@ -4,6 +4,8 @@
 
 const std::string SimpleRandomModel::model_name = "simple_random";
 
+extern const std::string SIMPLE_RANDOM_REWARD = "Reward Number";
+
 SimpleRandomModel::SimpleRandomModel(GameConfig& config, GameEnv& env) :
   config(config),
   env(env)
@@ -29,7 +31,7 @@ int SimpleRandomModel::run(int now_time) {
     }
   }
 
-  env.indicator["Reward Time"] = gain;
+  env.indicator[SIMPLE_RANDOM_REWARD] = gain;
   return 0;
 }
 
@@ -43,7 +45,10 @@ extern int register_simple_random_model() {
   model_info.generate_func = generate_simple_random_model;
   model_info.parameters = {};
   model_info.ext_info[ext_slot_type_string[ExtSlotTypeAction]] = &SimpleRandomActionExt::create_ext;
-
+  
+  model_info.indicator_fields.push_back(
+    SIMPLE_RANDOM_REWARD
+  );
   register_model(model_info);
   return 0;
 }

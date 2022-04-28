@@ -7,6 +7,8 @@
 #include "core/globalvar.h"
 #include <random>
 
+extern const std::string SIMPLE_RANDOM_REWARD;
+
 class SimpleRandomModel : public ModelBaseType {
 public:
   const static std::string model_name;

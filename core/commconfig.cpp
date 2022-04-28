@@ -35,6 +35,7 @@ extern int register_game_config() {
     {"port", "listen port", ParameterBaseType_INT, 53434, {}},
     {"database", "数据库文件", ParameterBaseType_STRING, std::string("data.db"), {}},
     {"model_name", "模型名字", ParameterBaseType_ENUM, 0, model_name_enum_ext},
+    {"work_root_dir", "保存数据的根目录", ParameterBaseType_STRING, std::string("./work_log/"), {}},
     {"generator_name", "生成器名字", ParameterBaseType_ENUM, 0, generator_name_enum_ext},
     {"simulate_name", "仿真名", ParameterBaseType_STRING, std::string("Simulate Temp", {})}
   };

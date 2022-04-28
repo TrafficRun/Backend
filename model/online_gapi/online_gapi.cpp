@@ -3,8 +3,8 @@
 #include <string>
 
 const std::string OnlineGAPIModel::model_name = "Online_GAPI";
-const extern std::string REWARD_INDICATOR = "Reward Number";
-const extern std::string PLANNING_TIME = "Planning Time";
+const extern std::string GAPI_REWARD_INDICATOR = "Reward Number";
+const extern std::string GAPI_PLANNING_TIME = "Planning Time";
 
 OnlineGAPIModel::OnlineGAPIModel(GameConfig& config, GameEnv& env) :
   config(config),
@@ -32,8 +32,8 @@ int OnlineGAPIModel::run(int now_time) {
       gain += std::min(OnlineGAPIActionExt::get_ext(maction)->agent_number, RandomGeneratorActionExtType::get_ext(maction)->reward_number);
     }
   }
-  env.indicator[REWARD_INDICATOR] = gain;
-  env.indicator[PLANNING_TIME] = time_standard + random_gen() % 500;
+  env.indicator[GAPI_REWARD_INDICATOR] = gain;
+  env.indicator[GAPI_PLANNING_TIME] = time_standard + random_gen() % 500;
   return 0;
 }
 
@@ -63,6 +63,14 @@ extern int register_online_gapi_model() {
     {"model_file", "离线模型文件", ParameterBaseType_STRING, std::string("model.data"), {}}
   };
   model_info.ext_info[ext_slot_type_string[ExtSlotTypeAction]] = &OnlineGAPIActionExt::create_ext;
+
+  model_info.indicator_fields.push_back(
+    GAPI_REWARD_INDICATOR
+  );
+
+  model_info.indicator_fields.push_back(
+    GAPI_PLANNING_TIME
+  );
 
   register_model(model_info);
   return 0;

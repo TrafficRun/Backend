@@ -142,6 +142,7 @@ int CMDLine::parse_cmd(int argc,char *argv[], GameConfig& config) {
   config.model_name = var_map["model_name"].as<std::string>();
   config.generator_name = var_map["generator_name"].as<std::string>();
   config.simulate_name = var_map["simulate_name"].as<std::string>();
+  config.work_root_dir = var_map["work_root_dir"].as<std::string>();
 
   // 初始化数据库
   database_init(config.database);

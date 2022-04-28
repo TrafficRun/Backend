@@ -15,7 +15,7 @@ configure_file("core/version.cpp.in" "${CMAKE_CURRENT_BINARY_DIR}/version.cpp" @
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Boost REQUIRED program_options system chrono atomic timer json)
+find_package(Boost REQUIRED program_options system chrono atomic timer json filesystem)
 find_package(Threads REQUIRED)
 
 set(SQLITECPP_RUN_CPPLINT OFF)
@@ -35,8 +35,9 @@ include_directories(./)
 aux_source_directory(./core/ CORE_SOURCE_FILES)
 file(GLOB CORE_HEADER_FILES ./core/*.h)
 
-# 数据库文件
+# 数据库、日志
 aux_source_directory(./core/database CORE_DATABASE_SOURCE_FILES)
+aux_source_directory(./core/logging CORE_LOGGING_SOURCE_FILES)
 
 # 网络
 aux_source_directory(./http/ NET_SOURCE_FILES)
@@ -76,7 +77,7 @@ add_executable(${PROJECT_NAME}
   ${MODELS_SRC} ${MODELS_HEADER} 
   ${REWARD_GENS_SRC} ${REWARD_GENS_SRC}
   ${NET_SOURCE_FILES} ${NET_HEADER_FILES}
-  ${CORE_DATABASE_SOURCE_FILES}
+  ${CORE_DATABASE_SOURCE_FILES} ${CORE_LOGGING_SOURCE_FILES}
 )
 
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads SQLiteCpp)

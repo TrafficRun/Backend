@@ -7,8 +7,8 @@
 #include "core/globalvar.h"
 #include <random>
 
-const extern std::string REWARD_INDICATOR;
-const extern std::string PLANNING_TIME;
+const extern std::string GAPI_REWARD_INDICATOR;
+const extern std::string GAPI_PLANNING_TIME;
 
 class OnlineGAPIModel : public ModelBaseType {
 public:
