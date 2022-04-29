@@ -7,3 +7,6 @@
 [submodule "thirdparty/fmt"]
 	path = thirdparty/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "thirdparty/zipper"]
+	path = thirdparty/zipper
+	url = https://github.com/sebastiandev/zipper.git

@@ -4,8 +4,11 @@
 #include "core/commconfig.h"
 #include "core/core_run.h"
 #include "core/version.h"
+#include "core/database/database.h"
 
 #include "cpp-httplib/httplib.h"
+#include "zipper/zipper.h"
+#include "fmt/core.h"
 
 #include <functional>
 #include <string>
@@ -16,8 +19,13 @@
 
 #include <boost/json.hpp>
 #include <boost/any.hpp>
+#include <boost/filesystem.hpp>
 
 const static char* http_json_mine_type = "application/json";
+const static char* http_zip_mine_type = "application/zip";
+
+namespace fs = boost::filesystem;
+
 HttpServer::HttpServer(GameConfig& config) : config(config) {
   serv.set_logger(std::bind(&HttpServer::logger, this, pl::_1, pl::_2));
   // 返回公共信息
@@ -32,6 +40,10 @@ HttpServer::HttpServer(GameConfig& config) : config(config) {
   serv.Get("/simulate_result", std::bind(&HttpServer::http_get_simulate_result, this, pl::_1, pl::_2));
   // 获取版本信息
   serv.Get("/version", std::bind(&HttpServer::http_get_version, this, pl::_1, pl::_2));
+  // 获取历史记录
+  serv.Get("/history", std::bind(&HttpServer::http_get_history, this, pl::_1, pl::_2));
+  // 下载历史记录
+  serv.Get("/get_log", std::bind(&HttpServer::http_get_log, this, pl::_1, pl::_2));
 
   // 头  
   serv.set_default_headers({
@@ -230,6 +242,27 @@ void HttpServer::http_get_simulate_result(const req_type& req, rsp_type& rsp) {
     }
   }
   rsp.set_content(result_from(-1, bj::value(nullptr)), http_json_mine_type);
+}
+
+void HttpServer::http_get_history(const req_type& req, rsp_type& rsp) {
+  rsp.set_content(result_from(0, bj::value_from(database->task->get_all())), http_json_mine_type);
+}
+
+void HttpServer::http_get_log(const req_type& req, rsp_type& rsp) {
+  std::string run_token = req.get_param_value("uid");
+  fs::path work_root_dir(config.work_root_dir);
+  fs::path data_dir = work_root_dir / run_token;
+  if (fs::exists(data_dir)) {
+    std::vector<unsigned char> zip_vect;
+    zipper::Zipper zip(zip_vect);
+    zip.add(data_dir.generic_string());
+    zip.close();
+
+    rsp.set_header("Content-Disposition", fmt::format("attachment;filename={}.zip", run_token));
+    rsp.set_content((const char*)zip_vect.data(), zip_vect.size(), http_zip_mine_type);
+  } else {
+    rsp.set_content("404 Not Found", "text/plain");
+  }
 }
 
 HttpServer::~HttpServer() {}
