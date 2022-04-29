@@ -28,6 +28,12 @@ GameEnvDetail CoreRun::detail() {
 }
 
 int CoreRun::run() {
+  boost::filesystem::path work_dir_path(work_dir);
+
+  // 日志初始化
+  boost::filesystem::path log_file = work_dir_path / "run.log";
+  logger = std::make_shared<Logging>(log_file.generic_string());
+
   const auto& model_config = std::find_if(global_var.models.begin(), global_var.models.end(), [&](const ModelType& item){
     return item.model_name == config.model_name;
   });
@@ -39,7 +45,11 @@ int CoreRun::run() {
   // 添加模型的扩展
   add_exts(model_config->model_name, model_config->ext_info);
   // 模型对象
-  ModelBaseType *model_obj = model_config->generate_func(config, env);
+  ModelBaseType *model_obj = model_config->generate_func(config, env, logger);
+  
+  // 生成记录表
+  boost::filesystem::path indicator_path = work_dir_path / "indicator.csv";
+  table_record = std::make_shared<TableRecord>(indicator_path.generic_string(), model_config->indicator_fields);
 
   const auto& generator_config = std::find_if(global_var.generators.begin(), global_var.generators.end(), [&](const GeneratorType& item) {
     return item.generator_name == config.generator_name;
@@ -51,7 +61,7 @@ int CoreRun::run() {
   // 添加生成器的扩展
   add_exts(generator_config->generator_name, generator_config->ext_info);
   // 生成器对象
-  GeneratorBaseType *generator_obj = generator_config->generate_func(config, env);
+  GeneratorBaseType *generator_obj = generator_config->generate_func(config, env, logger);
 
   // Add To sqlite
   TaskDBRecordType record;
@@ -61,11 +71,6 @@ int CoreRun::run() {
   record.gen_name = config.generator_name;
   record.uid = detail.uid;
   database->task->create(record);
-
-  // 生成记录表
-  boost::filesystem::path work_dir_path(work_dir);
-  boost::filesystem::path indicator_path = work_dir_path / "indicator.csv";
-  table_record = std::make_shared<TableRecord>(indicator_path.generic_string(), model_config->indicator_fields);
 
   for (int loop_time = 0; loop_time < env.time_step; ++loop_time) {
     env.rewards.clear();

@@ -4,10 +4,11 @@
 #include "parameter_type.h"
 #include "commconfig.h"
 #include "gameenv.h"
+#include "logging/logging.h"
 
 #include <functional>
 
-typedef std::function<ModelBaseType*(GameConfig& config, GameEnv& env)> generate_model_func_type;
+typedef std::function<ModelBaseType*(GameConfig& config, GameEnv& env, std::shared_ptr<Logging>)> generate_model_func_type;
 
 enum ExtSlotType {
   ExtSlotTypeAgent = 0,
@@ -27,7 +28,7 @@ struct ModelType {
   std::vector<std::string> indicator_fields;
 };
 
-typedef std::function<GeneratorBaseType*(GameConfig& config, GameEnv& env)> generate_generator_fun_type;
+typedef std::function<GeneratorBaseType*(GameConfig& config, GameEnv& env, std::shared_ptr<Logging>)> generate_generator_fun_type;
 
 struct GeneratorType {
   std::string generator_name;

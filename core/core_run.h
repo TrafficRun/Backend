@@ -6,6 +6,7 @@
 #include "commconfig.h"
 #include "gameenv.h"
 #include "logging/table_record.h"
+#include "logging/logging.h"
 
 class CoreRun {
 public:
@@ -20,6 +21,7 @@ private:
   GameConfig& config;
   std::string work_dir;
   std::shared_ptr<TableRecord> table_record;
+  std::shared_ptr<Logging> logger;
 
   int add_exts(const std::string &ext_name, const std::map<std::string, generate_ext_func_type>& exts);
   std::string generate_work_dir();

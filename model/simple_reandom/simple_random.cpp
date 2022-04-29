@@ -35,7 +35,8 @@ int SimpleRandomModel::run(int now_time) {
   return 0;
 }
 
-ModelBaseType* generate_simple_random_model(GameConfig& config, GameEnv& env) {
+ModelBaseType* generate_simple_random_model(GameConfig& config, GameEnv& env, std::shared_ptr<Logging> logger) {
+  logger->log("Init Simple Random Model");
   return new SimpleRandomModel(config, env);
 }
 

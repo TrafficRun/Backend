@@ -23,7 +23,7 @@ int RandomGenerator::generate(int now_time) {
   return 0;
 }
 
-GeneratorBaseType *generate_random_generator(GameConfig& config, GameEnv& env) {
+GeneratorBaseType *generate_random_generator(GameConfig& config, GameEnv& env, std::shared_ptr<Logging> logger) {
   return new RandomGenerator(config, env);
 }
 

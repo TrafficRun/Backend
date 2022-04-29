@@ -22,6 +22,7 @@ set(SQLITECPP_RUN_CPPLINT OFF)
 
 add_subdirectory(./thirdparty/cpp-httplib/)
 add_subdirectory(./thirdparty/SQLiteCpp)
+add_subdirectory(./thirdparty/fmt)
 
 include_directories(./thirdparty/)
 
@@ -80,4 +81,4 @@ add_executable(${PROJECT_NAME}
   ${CORE_DATABASE_SOURCE_FILES} ${CORE_LOGGING_SOURCE_FILES}
 )
 
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads SQLiteCpp)
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} Threads::Threads SQLiteCpp fmt::fmt)

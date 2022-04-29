@@ -37,7 +37,7 @@ int OnlineGAPIModel::run(int now_time) {
   return 0;
 }
 
-ModelBaseType* generate_online_gapi_model(GameConfig& config, GameEnv& env) {
+ModelBaseType* generate_online_gapi_model(GameConfig& config, GameEnv& env, std::shared_ptr<Logging> logger) {
   return new OnlineGAPIModel(config, env);
 }
 
