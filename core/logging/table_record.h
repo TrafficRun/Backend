@@ -12,7 +12,7 @@ public:
   int log(const std::map<std::string, double>& indicator);
   ~TableRecord();
 private:
-  std::ofstream out_fp;
+  std::ofstream m_out_fp;
   std::vector<std::string> m_fields;
 };
 

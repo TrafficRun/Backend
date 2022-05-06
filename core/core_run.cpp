@@ -5,11 +5,13 @@
 #include <algorithm>
 #include <numeric>
 #include <iostream>
+#include <fstream>
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/json.hpp>
 
 CoreRun::CoreRun(GameConfig& config, GameEnv& env) : 
   env(env),
@@ -71,6 +73,14 @@ int CoreRun::run() {
   record.gen_name = config.generator_name;
   record.uid = detail.uid;
   database->task->create(record);
+
+  // 保存配置
+  auto config_json = boost::json::value_from(config);
+  auto config_json_string = boost::json::serialize(config_json);
+  std::ofstream config_json_fp;
+  config_json_fp.open((work_dir_path / "config.json").generic_string(), std::ios::out | std::ios::trunc);
+  config_json_fp << config_json_string;
+  config_json_fp.close();
 
   for (int loop_time = 0; loop_time < env.time_step; ++loop_time) {
     env.rewards.clear();

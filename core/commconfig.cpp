@@ -43,3 +43,36 @@ extern int register_game_config() {
 
   return 0;
 }
+
+
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameConfig &c) {
+  boost::json::object jb = boost::json::value({
+    {"online", c.online},
+    {"server", c.server},
+    {"port", c.port},
+    {"database", c.database},
+    {"model_name", c.model_name},
+    {"work_root_dir", c.work_root_dir},
+    {"generator_name", c.generator_name},
+    {"simulate_name", c.simulate_name}
+  }).as_object();
+
+  for (const auto& params : c.ext_config) {
+    boost::json::object t_jb;
+    for (const auto& param: params.second) {
+      std::string m_typename = param.second.type().name();
+      if (m_typename == typeid(true).name()) {
+        t_jb[param.first] = boost::any_cast<bool>(param.second);
+      } else if (m_typename == typeid(1).name()) {
+        t_jb[param.first] = boost::any_cast<int>(param.second);
+      } else if (m_typename == typeid(0.1).name()) {
+        t_jb[param.first] = boost::any_cast<double>(param.second);
+      } else {
+        t_jb[param.first] = boost::any_cast<std::string>(param.second);
+      }
+    }
+    jb[params.first] = t_jb;
+  }
+
+  jv = jb;
+}

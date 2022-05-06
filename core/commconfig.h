@@ -25,5 +25,7 @@ public:
   std::map<std::string, std::map<std::string, boost::any>> ext_config;
 };
 
+extern void tag_invoke(boost::json::value_from_tag, boost::json::value &jv, const GameConfig &c);
+
 extern int register_game_config();
 #endif
